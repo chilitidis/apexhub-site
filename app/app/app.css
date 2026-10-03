@@ -346,3 +346,27 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
   background:transparent; color:var(--fg2); cursor:pointer; font-size:11px }
 .reorder .arrows button:disabled{ opacity:.3; cursor:default }
 .reorder .arrows button:hover:not(:disabled){ color:var(--gold); border-color:var(--goldd) }
+
+/* ── ανακοινώσεις ───────────────────────────────────────────────────── */
+.notes{ list-style:none; margin:0; padding:0; border-top:1px solid var(--rule) }
+.notes li{ display:grid; grid-template-columns:96px 1fr; gap:16px;
+  padding:14px 2px; border-bottom:1px solid var(--rule) }
+.notes time{ font-family:var(--mono); font-size:11px; color:var(--fg3); padding-top:2px }
+.notes b{ display:block; font-size:14.5px; font-weight:500 }
+.notes p{ margin-top:5px; color:var(--fg2); font-size:13.5px; line-height:1.6;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+.pinned{ color:var(--gold); font-size:9px; margin-right:7px; vertical-align:middle }
+@media (max-width:600px){ .notes li{ grid-template-columns:1fr; gap:4px } }
+
+/* ── η κάρτα «Συνέχισε» με πρόοδο ───────────────────────────────────── */
+.resume-txt{ flex:1 }
+.resume-txt .bar{ margin-top:8px; max-width:280px }
+.resume-txt .meta{ margin-top:5px }
+.resume .go{ align-self:center }
+
+/* Ορατή εστίαση παντού: η πλοήγηση με πληκτρολόγιο δεν πρέπει να είναι
+   μαντεψιά. Το :focus-visible δεν ενοχλεί όποιον χρησιμοποιεί ποντίκι. */
+.nav-item:focus-visible, .chip:focus-visible, .lk:focus-visible,
+.card2:focus-visible, .donebtn:focus-visible, .mini:focus-visible,
+.sidelist a:focus-visible, .notes a:focus-visible{
+  outline:2px solid var(--gold); outline-offset:2px; border-radius:9px }

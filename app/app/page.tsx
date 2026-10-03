@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentSession } from '@/lib/session';
-import { viewerOf, catalogue, resumePoint } from '@/lib/academy';
+import { viewerOf, catalogue, resumePoint, announcements } from '@/lib/academy';
 import { IPlay, IJournal, ISend } from '@/components/Icons';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,9 @@ export default async function Dashboard() {
   const s = currentSession();
   if (!s) redirect('/login');
   const v = await viewerOf(s.tid);
-  const [courses, resume] = await Promise.all([catalogue(v), resumePoint(v)]);
+  const [courses, resume, notes] = await Promise.all([
+    catalogue(v), resumePoint(v), announcements(5),
+  ]);
 
   const total = courses.reduce((a, c) => a + c.lessons, 0);
   const done = courses.reduce((a, c) => a + c.done, 0);
@@ -29,8 +31,12 @@ export default async function Dashboard() {
             <span className="resume-txt">
               <em>{resume.courseTitle}</em>
               <b>{resume.lessonTitle}</b>
+              <span className="bar">
+                <span style={{ width: `${resume.total ? (resume.done / resume.total) * 100 : 0}%` }} />
+              </span>
+              <span className="meta">{resume.done}/{resume.total} στο μάθημα</span>
             </span>
-            <span className="meta">Συνέχεια →</span>
+            <span className="meta go">Συνέχεια →</span>
           </Link>
         ) : (
           <div className="empty2">
@@ -54,6 +60,29 @@ export default async function Dashboard() {
             <span style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
           </div>
         </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-top"><h2>Ανακοινώσεις</h2></div>
+        {notes.length === 0 ? (
+          <div className="empty2"><b>Καμία ανακοίνωση.</b>Εδώ θα βλέπεις ό,τι ανακοινώνει η ομάδα.</div>
+        ) : (
+          <ul className="notes">
+            {notes.map((nt) => (
+              <li key={nt.id}>
+                <time dateTime={nt.published_at}>
+                  {new Date(nt.published_at).toLocaleDateString('el-GR', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                  })}
+                </time>
+                <div>
+                  <b>{nt.pinned && <span className="pinned" aria-label="Καρφιτσωμένη">●</span>}{nt.title}</b>
+                  {nt.body && <p>{nt.body}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="sec">

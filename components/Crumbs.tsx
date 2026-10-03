@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ISearch } from './Icons';
@@ -27,8 +28,26 @@ export default function Crumbs() {
   const path = usePathname();
   const parts = path.split('/').filter(Boolean);
 
+  /* Οι τίτλοι μαθήματος και lesson δεν υπάρχουν στη διαδρομή — μόνο τα slug.
+     Τους ζητάμε μία φορά ανά σελίδα· μέχρι να έρθουν, δείχνουμε το slug σε
+     αναγνώσιμη μορφή, ώστε να μη «χοροπηδάει» η μπάρα. */
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  const [course, lesson] = [parts[2], parts[3]];
+
+  useEffect(() => {
+    if (parts[1] !== 'academy' || !course) { setTitles({}); return; }
+    const p = new URLSearchParams({ course });
+    if (lesson) p.set('lesson', lesson);
+    let alive = true;
+    fetch(`/api/crumbs?${p}`)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((d) => { if (alive) setTitles(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [parts, course, lesson]);
+
   const crumbs = parts.map((seg, i) => ({
-    label: pretty(seg),
+    label: titles[seg] ?? pretty(seg),
     href: '/' + parts.slice(0, i + 1).join('/'),
     last: i === parts.length - 1,
   }));

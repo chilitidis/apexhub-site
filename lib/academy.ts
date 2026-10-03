@@ -41,14 +41,18 @@ export interface Lesson {
 }
 export interface LessonFile { id: string; lesson_id: string; name: string; url: string; size_bytes: number | null; sort: number }
 
-export interface Viewer { tid: number; admin: boolean; tiers: Set<string> }
+export interface Viewer { tid: number; admin: boolean; partner: boolean; tiers: Set<string> }
 
 /** Ποιος είναι ο θεατής: διαχειριστής; ποια πακέτα κρατάει; */
 export async function viewerOf(tid: number): Promise<Viewer> {
   const s = db();
-  const [{ data: adm }, { data: acc }] = await Promise.all([
+  const [{ data: adm }, { data: acc }, { data: prt }] = await Promise.all([
     s.from('platform_admins').select('telegram_id').eq('telegram_id', tid).maybeSingle(),
     s.from('member_access').select('access_tiers(slug)').eq('telegram_id', tid),
+    /* Το back office δεν αφορά κάθε μέλος — μόνο όποιον έχει καρτέλα
+       συνεργάτη. Χωρίς αυτόν τον έλεγχο, και τα 70 μέλη έβλεπαν στο μενού
+       μια πόρτα που τους ζητούσε σύνδεση που δεν έχουν. */
+    s.from('partners').select('id').eq('telegram_id', tid).maybeSingle(),
   ]);
 
   const tiers = new Set<string>(['vip']);          // βλ. σχόλιο παραπάνω
@@ -56,7 +60,7 @@ export async function viewerOf(tid: number): Promise<Viewer> {
     const t = Array.isArray(row.access_tiers) ? row.access_tiers[0] : row.access_tiers;
     if (t?.slug) tiers.add(t.slug);
   }
-  return { tid, admin: Boolean(adm), tiers };
+  return { tid, admin: Boolean(adm), partner: Boolean(prt), tiers };
 }
 
 /** Χάρτης «τι απαιτεί τι»: scope+target → σύνολο slug πακέτων. */
@@ -230,6 +234,32 @@ export async function setDone(tid: number, lessonId: string, done: boolean) {
   return done;
 }
 
+export interface Note { id: string; title: string; body: string | null; published_at: string; pinned: boolean }
+
+/**
+ * Οι ανακοινώσεις της ομάδας.
+ *
+ * Από τον ΥΠΑΡΧΟΝΤΑ πίνακα του back office, όχι από δεύτερο δικό μας. Δύο
+ * λίστες ανακοινώσεων σημαίνει ότι κάποια στιγμή η μία θα ξεχαστεί, και τα
+ * μέλη θα διαβάζουν παλιά νέα χωρίς να το ξέρει κανείς.
+ */
+export async function announcements(limit = 5): Promise<Note[]> {
+  const now = new Date().toISOString();
+  const { data } = await db()
+    .from('announcements')
+    .select('id, title, body, published_at, pinned, ends_at')
+    .not('published_at', 'is', null)
+    .lte('published_at', now)
+    .order('pinned', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(limit * 2);
+
+  return ((data ?? []) as Array<Note & { ends_at: string | null }>)
+    .filter((n) => !n.ends_at || n.ends_at > now)   // οι ληγμένες δεν εμφανίζονται
+    .slice(0, limit)
+    .map(({ id, title, body, published_at, pinned }) => ({ id, title, body, published_at, pinned }));
+}
+
 /** Πού έμεινε: το τελευταίο μάθημα που άγγιξε και δεν ολοκλήρωσε. */
 export async function resumePoint(v: Viewer) {
   const { data } = await db()
@@ -248,5 +278,16 @@ export async function resumePoint(v: Viewer) {
   if (!l) return null;
   const row = l as unknown as { slug: string; title: string; courses: { slug: string; title: string } | { slug: string; title: string }[] };
   const c = Array.isArray(row.courses) ? row.courses[0] : row.courses;
-  return { lessonSlug: row.slug, lessonTitle: row.title, courseSlug: c?.slug, courseTitle: c?.title };
+  /* Η πρόοδος ΤΟΥ μαθήματος στο οποίο επιστρέφει: χωρίς αυτήν η κάρτα λέει
+     «συνέχισε» χωρίς να δείχνει πόσο έχει μείνει. */
+  const { data: sibs } = await db().from('lessons')
+    .select('id').eq('course_id', (l as { course_id: string }).course_id).eq('status', 'published');
+  const ids = ((sibs ?? []) as Array<{ id: string }>).map((x) => x.id);
+  const doneCount = rows.filter((r) => r.completed_at && ids.includes(r.lesson_id)).length;
+
+  return {
+    lessonSlug: row.slug, lessonTitle: row.title,
+    courseSlug: c?.slug, courseTitle: c?.title,
+    done: doneCount, total: ids.length,
+  };
 }

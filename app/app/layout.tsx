@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         role={role}
         photo={s.photo}
         isAdmin={v.admin}
-        isPartner
+        isPartner={v.partner}
         journalUrl={process.env.NEXT_PUBLIC_JOURNAL_URL ?? 'https://ultimatradingjournal.com'}
         portalUrl={process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://portal.apexhub.gr'}
       />
