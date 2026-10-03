@@ -1,102 +1,252 @@
+import 'server-only';
+import { db } from './db';
+
 /**
- * Η ύλη της ακαδημίας.
+ * =============================================================================
+ * Το περιεχόμενο και ποιος το βλέπει
+ * =============================================================================
  *
- * ΓΙΑΤΙ ΕΔΩ ΚΑΙ ΟΧΙ ΣΕ ΒΑΣΗ: δεν υπάρχει ακόμη περιεχόμενο. Μια βάση για
- * άδειους πίνακες είναι μηδενικό κέρδος και τρία νέα πράγματα που μπορούν να
- * χαλάσουν — πίνακες, κλειδιά πρόσβασης, και ένα service role key μέσα στο
- * δημόσιο site που θα μπορούσε να διαβάσει τα πάντα, μέχρι και τις προμήθειες.
+ * ΟΛΟΣ Ο ΕΛΕΓΧΟΣ ΠΡΟΣΒΑΣΗΣ ΕΙΝΑΙ ΕΔΩ, ΣΤΟΝ SERVER. Το front-end δεν «κρύβει»
+ * κλειδωμένα μαθήματα — ο server δεν στέλνει ποτέ το vimeo_id ενός μαθήματος
+ * που το μέλος δεν δικαιούται. Αν το έκρυβε μόνο το CSS, θα αρκούσε ένα
+ * δεξί κλικ για να φανεί.
  *
- * Όταν μπουν τα βίντεο και θελήσουμε πραγματική πρόοδο ανά μέλος, η ύλη
- * μεταφέρεται σε πίνακα και αυτό το αρχείο γίνεται seed. Μέχρι τότε, η σειρά
- * των μαθημάτων είναι η μόνη πληροφορία που χρειαζόμαστε, και είναι σταθερή.
+ * Ο ΚΑΝΟΝΑΣ ΠΡΟΣΒΑΣΗΣ:
+ *   · διαχειριστής                → τα πάντα
+ *   · is_free                     → κάθε μέλος
+ *   · κανένα πακέτο δηλωμένο      → κάθε μέλος (ανοιχτό εξ ορισμού)
+ *   · δηλωμένα πακέτα             → μόνο όποιος κρατάει ένα από αυτά
+ *
+ * Κάθε μέλος που περνάει την πύλη του Telegram κρατάει αυτομάτως το «vip»:
+ * η είσοδος ΑΠΑΙΤΕΙ συμμετοχή στο VIP group, οπότε μια δεύτερη λίστα με τα
+ * ίδια 70 άτομα θα ήταν αντίγραφο που θα ξεσυγχρονιζόταν.
  */
 
-export type Lesson = {
-  slug: string;
-  title: string;
-  summary: string;
-  minutes?: number;
-  /** Χωρίς βίντεο ακόμη. Όταν μπει, εδώ πάει το embed URL. */
-  video?: string;
+export type Level = 'beginner' | 'intermediate' | 'advanced';
+
+export const LEVEL_EL: Record<Level, string> = {
+  beginner: 'Αρχάριος', intermediate: 'Μεσαίος', advanced: 'Προχωρημένος',
 };
 
-export type Section = {
-  slug: string;
-  title: string;
-  kicker: string;
-  intro: string;
-  lessons: Lesson[];
-};
+export interface Course {
+  id: string; slug: string; title: string; subtitle: string | null;
+  description: string | null; cover_url: string | null;
+  level: Level; category: string | null; sort: number; status: string;
+}
+export interface Module { id: string; course_id: string; title: string; summary: string | null; sort: number; status: string }
+export interface Lesson {
+  id: string; module_id: string; course_id: string; slug: string; title: string;
+  summary: string | null; body: string | null; vimeo_id: string | null;
+  duration_sec: number | null; sort: number; status: string; is_free: boolean;
+}
+export interface LessonFile { id: string; lesson_id: string; name: string; url: string; size_bytes: number | null; sort: number }
 
-export const SECTIONS: Section[] = [
-  {
-    slug: 'vaseis',
-    title: 'Βάσεις',
-    kicker: 'Ενότητα Ι',
-    intro:
-      'Τι είναι πραγματικά μια αγορά, ποιος είναι απέναντί σου και γιατί '
-      + 'υπάρχει η τιμή που βλέπεις. Χωρίς αυτά, όλα τα υπόλοιπα είναι αντιγραφή.',
-    lessons: [
-      { slug: 'ti-einai-i-agora', title: 'Τι είναι η αγορά', summary: 'Αγοραστές, πωλητές και γιατί κινείται η τιμή.' },
-      { slug: 'orologia', title: 'Η ορολογία που χρειάζεσαι', summary: 'Spread, μόχλευση, lot, pip — μόνο όσα θα χρησιμοποιείς.' },
-      { slug: 'platforma', title: 'Η πλατφόρμα σου', summary: 'Πώς ανοίγεις, κλείνεις και διαβάζεις μια θέση.' },
-    ],
-  },
-  {
-    slug: 'domi-agoras',
-    title: 'Δομή αγοράς',
-    kicker: 'Ενότητα ΙΙ',
-    intro:
-      'Πώς διαβάζεται ένα chart χωρίς δείκτες. Πού είναι η προσφορά, πού η '
-      + 'ζήτηση, και πότε αλλάζει χέρια η αγορά.',
-    lessons: [
-      { slug: 'taseis', title: 'Τάσεις και διορθώσεις', summary: 'Πότε συνεχίζει και πότε γυρίζει.' },
-      { slug: 'epipeda', title: 'Επίπεδα που μετράνε', summary: 'Ποια επίπεδα κρατάνε και ποια είναι θόρυβος.' },
-      { slug: 'xronika-plaisia', title: 'Χρονικά πλαίσια', summary: 'Γιατί το ίδιο chart λέει δύο διαφορετικά πράγματα.' },
-    ],
-  },
-  {
-    slug: 'risko',
-    title: 'Διαχείριση ρίσκου',
-    kicker: 'Ενότητα ΙΙΙ',
-    intro:
-      'Το κομμάτι που κρατάει κάποιον στις αγορές περισσότερο από έναν χρόνο. '
-      + 'Το μέγεθος θέσης και το stop έρχονται πριν από τον στόχο.',
-    lessons: [
-      { slug: 'megethos-thesis', title: 'Μέγεθος θέσης', summary: 'Πόσο ρισκάρεις ανά κίνηση, και γιατί αυτό το νούμερο δεν αλλάζει.' },
-      { slug: 'stop', title: 'Πού μπαίνει το stop', summary: 'Το stop δεν είναι απόσταση. Είναι το σημείο που ακυρώνει την ιδέα.' },
-      { slug: 'drawdown', title: 'Σειρές ζημιών', summary: 'Τι σημαίνει στατιστικά μια κακή εβδομάδα, και πότε είναι πρόβλημα.' },
-    ],
-  },
-  {
-    slug: 'psychologia',
-    title: 'Ψυχολογία',
-    kicker: 'Ενότητα ΙV',
-    intro:
-      'Αυτό που ρίχνει τους περισσότερους δεν είναι η ανάλυση. Είναι η '
-      + 'ανυπομονησία, η εκδίκηση και η απομόνωση.',
-    lessons: [
-      { slug: 'peitharxia', title: 'Πειθαρχία χωρίς θέληση', summary: 'Κανόνες που δουλεύουν ακόμη και σε κακή μέρα.' },
-      { slug: 'imerologio', title: 'Το ημερολόγιο ως καθρέφτης', summary: 'Τι καταγράφεις, και τι βλέπεις μετά από 50 κινήσεις.' },
-      { slug: 'ypomoni', title: 'Η αναμονή ως θέση', summary: 'Το να μην κάνεις τίποτα είναι απόφαση, όχι αδράνεια.' },
-    ],
-  },
-];
+export interface Viewer { tid: number; admin: boolean; tiers: Set<string> }
 
-export const allLessons = () =>
-  SECTIONS.flatMap((s) => s.lessons.map((l) => ({ ...l, section: s })));
+/** Ποιος είναι ο θεατής: διαχειριστής; ποια πακέτα κρατάει; */
+export async function viewerOf(tid: number): Promise<Viewer> {
+  const s = db();
+  const [{ data: adm }, { data: acc }] = await Promise.all([
+    s.from('platform_admins').select('telegram_id').eq('telegram_id', tid).maybeSingle(),
+    s.from('member_access').select('access_tiers(slug)').eq('telegram_id', tid),
+  ]);
 
-export function findLesson(slug: string) {
-  for (const s of SECTIONS) {
-    const i = s.lessons.findIndex((l) => l.slug === slug);
-    if (i >= 0) return { section: s, lesson: s.lessons[i], index: i };
+  const tiers = new Set<string>(['vip']);          // βλ. σχόλιο παραπάνω
+  for (const row of (acc ?? []) as Array<{ access_tiers: { slug: string } | { slug: string }[] | null }>) {
+    const t = Array.isArray(row.access_tiers) ? row.access_tiers[0] : row.access_tiers;
+    if (t?.slug) tiers.add(t.slug);
   }
-  return null;
+  return { tid, admin: Boolean(adm), tiers };
 }
 
-/** Η επόμενη και η προηγούμενη, διασχίζοντας τις ενότητες σαν ένα βιβλίο. */
-export function neighbours(slug: string) {
-  const flat = allLessons();
-  const i = flat.findIndex((l) => l.slug === slug);
-  return { prev: i > 0 ? flat[i - 1] : null, next: i >= 0 && i < flat.length - 1 ? flat[i + 1] : null };
+/** Χάρτης «τι απαιτεί τι»: scope+target → σύνολο slug πακέτων. */
+async function accessMap(): Promise<Map<string, Set<string>>> {
+  const { data } = await db()
+    .from('content_access')
+    .select('scope, target_id, access_tiers(slug)');
+  const m = new Map<string, Set<string>>();
+  for (const r of (data ?? []) as Array<{ scope: string; target_id: string; access_tiers: { slug: string } | { slug: string }[] | null }>) {
+    const t = Array.isArray(r.access_tiers) ? r.access_tiers[0] : r.access_tiers;
+    if (!t?.slug) continue;
+    const k = `${r.scope}:${r.target_id}`;
+    if (!m.has(k)) m.set(k, new Set());
+    m.get(k)!.add(t.slug);
+  }
+  return m;
+}
+
+function allowed(v: Viewer, req: Set<string> | undefined): boolean {
+  if (v.admin) return true;
+  if (!req || req.size === 0) return true;       // κανένα πακέτο = ανοιχτό
+  for (const slug of req) if (v.tiers.has(slug)) return true;
+  return false;
+}
+
+export interface LessonView extends Omit<Lesson, 'vimeo_id' | 'body'> {
+  locked: boolean;
+  done: boolean;
+  /** Μόνο αν ΔΕΝ είναι κλειδωμένο. Αλλιώς δεν φεύγει ποτέ από τον server. */
+  vimeo_id?: string | null;
+  body?: string | null;
+}
+
+export interface CourseView extends Course {
+  lessons: number; done: number; locked: boolean; minutes: number;
+}
+
+/** Ο κατάλογος, με πρόοδο και κλειδώματα υπολογισμένα. */
+export async function catalogue(v: Viewer): Promise<CourseView[]> {
+  const s = db();
+  const q = s.from('courses').select('*').order('sort');
+  const { data: courses } = v.admin ? await q : await q.eq('status', 'published');
+
+  const ids = (courses ?? []).map((c) => (c as Course).id);
+  if (!ids.length) return [];
+
+  const [{ data: lessons }, { data: prog }, am] = await Promise.all([
+    s.from('lessons').select('id, course_id, module_id, is_free, duration_sec, status').in('course_id', ids),
+    s.from('lesson_progress').select('lesson_id, completed_at').eq('telegram_id', v.tid),
+    accessMap(),
+  ]);
+
+  const doneSet = new Set(
+    ((prog ?? []) as Array<{ lesson_id: string; completed_at: string | null }>)
+      .filter((p) => p.completed_at).map((p) => p.lesson_id),
+  );
+
+  return (courses ?? []).map((raw) => {
+    const c = raw as unknown as Course;
+    const ls = ((lessons ?? []) as Array<{ id: string; course_id: string; module_id: string; is_free: boolean; duration_sec: number | null; status: string }>)
+      .filter((l) => l.course_id === c.id && (v.admin || l.status === 'published'));
+    return {
+      ...c,
+      lessons: ls.length,
+      done: ls.filter((l) => doneSet.has(l.id)).length,
+      minutes: Math.round(ls.reduce((a, l) => a + (l.duration_sec ?? 0), 0) / 60),
+      locked: !allowed(v, am.get(`course:${c.id}`)),
+    };
+  });
+}
+
+/** Ένα μάθημα με τις ενότητες και τα lessons του, κλειδώματα υπολογισμένα. */
+export async function courseBySlug(v: Viewer, slug: string) {
+  const s = db();
+  const { data: c } = await s.from('courses').select('*').eq('slug', slug).maybeSingle();
+  if (!c) return null;
+  const course = c as unknown as Course;
+  if (course.status !== 'published' && !v.admin) return null;
+
+  const [{ data: mods }, { data: les }, { data: prog }, am] = await Promise.all([
+    s.from('modules').select('*').eq('course_id', course.id).order('sort'),
+    s.from('lessons').select('*').eq('course_id', course.id).order('sort'),
+    s.from('lesson_progress').select('lesson_id, completed_at').eq('telegram_id', v.tid),
+    accessMap(),
+  ]);
+
+  const doneSet = new Set(
+    ((prog ?? []) as Array<{ lesson_id: string; completed_at: string | null }>)
+      .filter((p) => p.completed_at).map((p) => p.lesson_id),
+  );
+
+  const courseLocked = !allowed(v, am.get(`course:${course.id}`));
+
+  const modules = ((mods ?? []) as unknown as Module[])
+    .filter((m) => v.admin || m.status === 'published')
+    .map((m) => {
+      const modLocked = courseLocked || !allowed(v, am.get(`module:${m.id}`));
+      const items = ((les ?? []) as unknown as Lesson[])
+        .filter((l) => l.module_id === m.id && (v.admin || l.status === 'published'))
+        .map((l) => {
+          const locked = l.is_free ? false
+            : modLocked || !allowed(v, am.get(`lesson:${l.id}`));
+          const out: LessonView = {
+            id: l.id, module_id: l.module_id, course_id: l.course_id, slug: l.slug,
+            title: l.title, summary: l.summary, duration_sec: l.duration_sec,
+            sort: l.sort, status: l.status, is_free: l.is_free,
+            locked, done: doneSet.has(l.id),
+          };
+          return out;
+        });
+      return { ...m, locked: modLocked, items };
+    });
+
+  const all = modules.flatMap((m) => m.items);
+  return {
+    course,
+    modules,
+    total: all.length,
+    done: all.filter((l) => l.done).length,
+    locked: courseLocked,
+  };
+}
+
+/** Ένα lesson. Το βίντεο και το κείμενο φεύγουν ΜΟΝΟ αν δικαιούται. */
+export async function lessonBySlug(v: Viewer, courseSlug: string, lessonSlug: string) {
+  const full = await courseBySlug(v, courseSlug);
+  if (!full) return null;
+
+  const flat = full.modules.flatMap((m) => m.items.map((l) => ({ ...l, moduleTitle: m.title })));
+  const idx = flat.findIndex((l) => l.slug === lessonSlug);
+  if (idx < 0) return null;
+
+  const head = flat[idx];
+  let body: string | null = null;
+  let vimeo: string | null = null;
+  let files: LessonFile[] = [];
+
+  if (!head.locked) {
+    const { data: l } = await db().from('lessons')
+      .select('body, vimeo_id').eq('id', head.id).maybeSingle();
+    body = (l as { body: string | null } | null)?.body ?? null;
+    vimeo = (l as { vimeo_id: string | null } | null)?.vimeo_id ?? null;
+    const { data: f } = await db().from('lesson_files')
+      .select('*').eq('lesson_id', head.id).order('sort');
+    files = (f ?? []) as unknown as LessonFile[];
+  }
+
+  return {
+    course: full.course,
+    module: full.modules.find((m) => m.id === head.module_id)!,
+    lesson: { ...head, body, vimeo_id: vimeo },
+    files,
+    prev: idx > 0 ? flat[idx - 1] : null,
+    next: idx < flat.length - 1 ? flat[idx + 1] : null,
+    siblings: full.modules.find((m) => m.id === head.module_id)!.items,
+  };
+}
+
+/** Σήμανση ολοκλήρωσης. Επιστρέφει τη νέα κατάσταση. */
+export async function setDone(tid: number, lessonId: string, done: boolean) {
+  /* Ο τύπος του upsert χωρίς generated types καταλήγει `never[]`· η ρητή
+     δήλωση λέει στον μεταγλωττιστή τι στέλνουμε, χωρίς να χαλαρώσουμε
+     τον έλεγχο αλλού. */
+  const row: Record<string, unknown> = {
+    telegram_id: tid,
+    lesson_id: lessonId,
+    completed_at: done ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
+  };
+  await db().from('lesson_progress').upsert(row, { onConflict: 'telegram_id,lesson_id' });
+  return done;
+}
+
+/** Πού έμεινε: το τελευταίο μάθημα που άγγιξε και δεν ολοκλήρωσε. */
+export async function resumePoint(v: Viewer) {
+  const { data } = await db()
+    .from('lesson_progress')
+    .select('lesson_id, completed_at, updated_at')
+    .eq('telegram_id', v.tid)
+    .order('updated_at', { ascending: false })
+    .limit(20);
+
+  const rows = (data ?? []) as Array<{ lesson_id: string; completed_at: string | null }>;
+  const open = rows.find((r) => !r.completed_at) ?? rows[0];
+  if (!open) return null;
+
+  const { data: l } = await db().from('lessons')
+    .select('slug, title, course_id, courses(slug, title)').eq('id', open.lesson_id).maybeSingle();
+  if (!l) return null;
+  const row = l as unknown as { slug: string; title: string; courses: { slug: string; title: string } | { slug: string; title: string }[] };
+  const c = Array.isArray(row.courses) ? row.courses[0] : row.courses;
+  return { lessonSlug: row.slug, lessonTitle: row.title, courseSlug: c?.slug, courseTitle: c?.title };
 }

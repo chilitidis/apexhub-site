@@ -1,0 +1,268 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Η πλατφόρμα μελών
+   Πυκνότητα εργαλείου, όχι landing page: μικρότεροι τίτλοι, σφιχτά κενά,
+   μία μόνο έμφαση ανά οθόνη. Ίδια παλέτα και γραμματοσειρές με το site.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{ --navw:260px; --navw-sm:72px; --tbh:56px }
+
+.shell{ display:flex; min-height:100svh; background:var(--base) }
+.shell-main{ flex:1; min-width:0; display:flex; flex-direction:column }
+.shell-body{ flex:1; padding:clamp(20px,2.4vw,34px) clamp(18px,2.6vw,38px) 72px; min-width:0 }
+
+/* ── sidebar ────────────────────────────────────────────────────────── */
+.nav{ position:sticky; top:0; align-self:flex-start; height:100svh; flex:0 0 var(--navw);
+      width:var(--navw); display:flex; flex-direction:column;
+      background:#0A0A0C; border-right:1px solid var(--rule);
+      transition:flex-basis .18s var(--out), width .18s var(--out) }
+.nav-narrow{ flex-basis:var(--navw-sm); width:var(--navw-sm) }
+
+.nav-brand{ display:flex; align-items:center; gap:10px; padding:20px 18px 22px;
+            text-decoration:none; color:inherit }
+.nav-brand svg{ width:24px; height:24px; flex:none }
+.nav-word{ font-weight:600; font-size:17px; letter-spacing:-.03em; white-space:nowrap }
+.nav-word i{ font-style:normal; color:var(--gold) }
+.nav-narrow .nav-word{ display:none }
+
+.nav-list{ display:flex; flex-direction:column; gap:2px; padding:0 10px; flex:1; overflow-y:auto }
+.nav-item{ position:relative; display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:10px; text-decoration:none; color:var(--fg2);
+  font-size:14.5px; white-space:nowrap;
+  transition:background .15s var(--out), color .15s var(--out) }
+.nav-item:hover{ background:rgb(255 255 255/4%); color:var(--fg) }
+/* Η ενεργή: λεπτή χρυσή ένδειξη αριστερά και ελάχιστα φωτεινότερο φόντο. */
+.nav-item.on{ background:rgb(255 255 255/6%); color:var(--fg) }
+.nav-item.on::before{ content:''; position:absolute; left:-10px; top:9px; bottom:9px;
+  width:2px; border-radius:0 2px 2px 0; background:var(--gold) }
+.nav-ico{ flex:none; opacity:.9 }
+.nav-item.on .nav-ico{ color:var(--gold); opacity:1 }
+.nav-ext{ width:13px; height:13px; margin-left:auto; opacity:.5 }
+.nav-narrow .nav-item span,
+.nav-narrow .nav-ext{ display:none }
+.nav-narrow .nav-item{ justify-content:center; padding-inline:0 }
+
+.nav-foot{ position:relative; padding:14px 12px 16px; border-top:1px solid var(--rule) }
+.nav-me{ display:flex; align-items:center; gap:10px; padding:4px 4px 12px }
+.nav-me img, .nav-av{ width:32px; height:32px; border-radius:50%; flex:none; object-fit:cover }
+.nav-av{ display:grid; place-items:center; background:linear-gradient(150deg,#26262C,#141418);
+         border:1px solid var(--rule2); font-size:13px; color:var(--fg2) }
+.nav-who{ min-width:0; display:flex; flex-direction:column; line-height:1.3 }
+.nav-who b{ font-size:13.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.nav-who em{ font-style:normal; font-size:11px; color:var(--fg3) }
+.nav-narrow .nav-who{ display:none }
+.nav-out{ width:100%; border:1px solid var(--rule2); background:transparent; color:var(--fg2);
+  border-radius:9px; padding:8px; font-size:12.5px; cursor:pointer; font-family:var(--disp);
+  transition:border-color .15s var(--out), color .15s var(--out) }
+.nav-out:hover{ border-color:rgb(233 196 92/40%); color:var(--gold) }
+.nav-narrow .nav-out{ font-size:0; padding:8px 0 }
+.nav-narrow .nav-out::after{ content:'⎋'; font-size:14px }
+.nav-collapse{ position:absolute; top:-14px; right:-11px; width:22px; height:22px;
+  border-radius:50%; border:1px solid var(--rule2); background:#0A0A0C; color:var(--fg3);
+  font-size:11px; cursor:pointer; display:grid; place-items:center }
+.nav-collapse:hover{ color:var(--gold); border-color:var(--goldd) }
+
+.nav-burger, .nav-scrim{ display:none }
+
+@media (max-width:860px){
+  .nav{ position:fixed; z-index:70; left:0; top:0; transform:translateX(-100%);
+        transition:transform .2s var(--out); flex-basis:272px; width:272px }
+  .nav-open{ transform:none }
+  .nav-collapse{ display:none }
+  .shell-body{ padding-top:14px }
+  .nav-burger{ display:grid; place-items:center; position:fixed; z-index:71; left:12px; top:10px;
+    width:38px; height:38px; border-radius:10px; border:1px solid var(--rule2);
+    background:rgb(12 12 14/88%); backdrop-filter:blur(8px); color:var(--fg); cursor:pointer }
+  .nav-scrim{ display:block; position:fixed; inset:0; z-index:69; border:0;
+    background:rgb(0 0 0/55%); backdrop-filter:blur(2px) }
+  .topbar{ padding-left:60px }
+}
+
+/* ── μπάρα διαδρομής ────────────────────────────────────────────────── */
+.topbar{ position:sticky; top:0; z-index:30; height:var(--tbh);
+  display:flex; align-items:center; gap:18px;
+  padding-inline:clamp(18px,2.6vw,38px);
+  background:rgb(12 12 14/82%); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--rule) }
+.crumbs{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--fg3);
+         min-width:0; overflow:hidden; white-space:nowrap }
+.crumbs span{ display:inline-flex; align-items:center; gap:8px }
+.crumbs a{ color:var(--fg3); text-decoration:none }
+.crumbs a:hover{ color:var(--fg) }
+.crumbs b{ color:var(--fg); font-weight:500 }
+.crumbs i{ font-style:normal; opacity:.4 }
+
+.topsearch{ margin-left:auto; position:relative; display:flex; align-items:center }
+.topsearch-ico{ position:absolute; left:11px; color:var(--fg3); pointer-events:none }
+.topsearch input{ width:min(280px,42vw); background:rgb(255 255 255/4%);
+  border:1px solid var(--rule); border-radius:9px; padding:8px 12px 8px 34px;
+  color:var(--fg); font-family:var(--disp); font-size:13px;
+  transition:border-color .15s var(--out), background .15s var(--out) }
+.topsearch input::placeholder{ color:var(--fg3) }
+.topsearch input:focus{ outline:none; border-color:rgb(233 196 92/45%); background:rgb(255 255 255/6%) }
+@media (max-width:620px){ .topsearch{ display:none } }
+
+/* ── τυπογραφία εργαλείου ───────────────────────────────────────────── */
+.h1{ font-size:clamp(21px,2.3vw,27px); font-weight:500; letter-spacing:-.025em }
+.h2{ font-size:16px; font-weight:500; letter-spacing:-.015em }
+.sub{ margin-top:5px; color:var(--fg2); font-size:14px }
+.sec{ margin-top:clamp(26px,3vw,40px) }
+.sec-top{ display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+          margin-bottom:12px }
+.sec-top h2{ font-size:13px; font-weight:500; letter-spacing:.1em; text-transform:uppercase;
+             color:var(--fg3); font-family:var(--mono) }
+.sec-top a{ font-size:13px; color:var(--fg3); text-decoration:none }
+.sec-top a:hover{ color:var(--gold) }
+
+/* ── κάρτες ─────────────────────────────────────────────────────────── */
+.card2{ border:1px solid var(--rule); border-radius:14px; background:var(--panel);
+        padding:18px; transition:border-color .15s var(--out), background .15s var(--out) }
+a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
+.grid{ display:grid; gap:14px }
+.g3{ grid-template-columns:repeat(auto-fill,minmax(270px,1fr)) }
+.g2{ grid-template-columns:repeat(auto-fill,minmax(320px,1fr)) }
+
+/* ── πρόοδος ────────────────────────────────────────────────────────── */
+.bar{ height:3px; border-radius:3px; background:rgb(255 255 255/9%); overflow:hidden }
+.bar span{ display:block; height:100%; background:linear-gradient(90deg,var(--goldd),var(--gold));
+           transition:width .3s var(--out) }
+.meta{ font-family:var(--mono); font-size:11px; color:var(--fg3);
+       font-variant-numeric:tabular-nums }
+
+/* ── κενές καταστάσεις ──────────────────────────────────────────────── */
+.empty2{ border:1px dashed var(--rule2); border-radius:14px; padding:40px 24px;
+         text-align:center; color:var(--fg3); font-size:14px }
+.empty2 b{ display:block; color:var(--fg2); font-weight:500; margin-bottom:6px; font-size:15px }
+
+/* ── skeleton ───────────────────────────────────────────────────────── */
+.sk{ border-radius:8px; background:linear-gradient(90deg,
+     rgb(255 255 255/4%), rgb(255 255 255/8%), rgb(255 255 255/4%));
+     background-size:200% 100%; animation:skmove 1.2s linear infinite }
+@keyframes skmove{ to{ background-position:-200% 0 } }
+@media (prefers-reduced-motion:reduce){ .sk{ animation:none } }
+
+/* ── σήμανση δείγματος ──────────────────────────────────────────────── */
+.tagdemo{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:#0C0C0E; background:var(--gold);
+  border-radius:4px; padding:2px 6px; vertical-align:middle }
+
+/* ── αρχική ─────────────────────────────────────────────────────────── */
+.resume{ display:flex; align-items:center; gap:14px }
+.resume-ico{ flex:none; width:38px; height:38px; border-radius:10px; display:grid;
+  place-items:center; background:rgb(233 196 92/12%); color:var(--gold) }
+.resume-txt{ min-width:0; display:flex; flex-direction:column; gap:2px }
+.resume-txt em{ font-style:normal; font-size:11.5px; color:var(--fg3) }
+.resume-txt b{ font-size:15px; font-weight:500 }
+.resume .meta{ margin-left:auto; white-space:nowrap }
+.prog-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px }
+.quick{ display:flex; align-items:center; gap:13px; color:inherit; text-decoration:none }
+.quick > svg{ flex:none; color:var(--goldd) }
+.quick span{ display:flex; flex-direction:column; gap:2px }
+.quick b{ font-size:14.5px; font-weight:500 }
+.quick em{ font-style:normal; font-size:12.5px; color:var(--fg3) }
+
+/* ── ενσωματωμένα εργαλεία ──────────────────────────────────────────── */
+.frame-embed{ margin-top:20px; border:1px solid var(--rule); border-radius:14px;
+  overflow:hidden; background:#0B1220; height:min(76svh,900px) }
+.frame-embed iframe{ width:100%; height:100%; border:0; display:block }
+
+/* ── ζεύγη κλειδί/τιμή ──────────────────────────────────────────────── */
+.kv{ display:grid; grid-template-columns:auto 1fr; gap:10px 22px; margin:0 }
+.kv dt{ font-size:12.5px; color:var(--fg3) }
+.kv dd{ margin:0; font-size:14px }
+
+/* ── φίλτρα ─────────────────────────────────────────────────────────── */
+.chips2{ display:flex; flex-wrap:wrap; gap:7px; margin-top:18px }
+.chip{ font-size:12.5px; color:var(--fg2); text-decoration:none;
+  border:1px solid var(--rule); border-radius:999px; padding:6px 13px;
+  transition:border-color .15s var(--out), color .15s var(--out), background .15s var(--out) }
+.chip:hover{ border-color:var(--rule2); color:var(--fg) }
+.chip.on{ border-color:var(--goldd); color:var(--gold); background:rgb(233 196 92/8%) }
+.chip.clear{ color:var(--fg3); border-style:dashed }
+
+/* ── κάρτα μαθήματος ────────────────────────────────────────────────── */
+.card2.course{ padding:0; overflow:hidden; display:flex; flex-direction:column;
+               text-decoration:none; color:inherit }
+.course-cover{ position:relative; aspect-ratio:16/9; background:
+  linear-gradient(145deg,#15161B,#0C0C0E); display:grid; place-items:center;
+  border-bottom:1px solid var(--rule) }
+.course-cover img{ width:100%; height:100%; object-fit:cover; display:block }
+.course-mark{ font-weight:600; font-size:17px; letter-spacing:-.03em; color:var(--fg3) }
+.course-mark i{ font-style:normal; color:var(--goldd) }
+.course.locked .course-cover{ filter:blur(2px) saturate(.6); opacity:.65 }
+.lockpill, .draftpill{ position:absolute; top:10px; right:10px; display:grid; place-items:center;
+  padding:5px 7px; border-radius:7px; background:rgb(12 12 14/88%);
+  border:1px solid var(--rule2); color:var(--gold) }
+.draftpill{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--fg2); right:auto; left:10px }
+.course-body{ padding:14px 15px 16px; display:flex; flex-direction:column; gap:7px; flex:1 }
+.course-sub{ font-size:12.5px; color:var(--fg2) }
+.course-body .bar{ margin-top:auto }
+
+/* ── σελίδα μαθήματος ───────────────────────────────────────────────── */
+.coursehead{ margin-top:18px; display:flex; align-items:center; justify-content:space-between; gap:18px }
+.coursedesc{ margin-top:16px; color:var(--fg2); font-size:14.8px; max-width:62ch; line-height:1.65 }
+.mod{ border:1px solid var(--rule); border-radius:12px; background:var(--panel); margin-bottom:10px }
+.mod > summary{ display:flex; align-items:center; gap:13px; padding:14px 15px; cursor:pointer;
+  list-style:none }
+.mod > summary::-webkit-details-marker{ display:none }
+.mod-n{ font-family:var(--mono); font-size:11px; color:var(--goldd); flex:none }
+.mod-t{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 }
+.mod-t b{ font-size:14.5px; font-weight:500 }
+.mod-t em{ font-style:normal; font-size:12.5px; color:var(--fg3) }
+.lessons2{ list-style:none; margin:0; padding:0 8px 8px }
+.lk{ display:flex; align-items:center; gap:12px; padding:10px 8px; border-radius:9px;
+  text-decoration:none; color:inherit; transition:background .15s var(--out) }
+.lk:hover{ background:rgb(255 255 255/4%) }
+.lk-ic{ flex:none; width:26px; height:26px; border-radius:7px; display:grid; place-items:center;
+  background:rgb(255 255 255/5%); color:var(--fg3) }
+.lk-t{ display:flex; flex-direction:column; gap:1px; min-width:0; flex:1 }
+.lk-t b{ font-size:14px; font-weight:400 }
+.lk-t em{ font-style:normal; font-size:12px; color:var(--fg3) }
+.lk.locked{ opacity:.55 }
+.lk.locked .lk-ic{ color:var(--goldd) }
+
+/* ── lesson ─────────────────────────────────────────────────────────── */
+.lesson2{ display:grid; grid-template-columns:1fr 280px; gap:clamp(20px,3vw,42px); align-items:start }
+@media (max-width:1000px){ .lesson2{ grid-template-columns:1fr } .lesson2-side{ order:-1 } }
+.player2{ margin-top:18px; aspect-ratio:16/9; border-radius:12px; overflow:hidden;
+  border:1px solid var(--rule); background:#000 }
+.player2 iframe{ width:100%; height:100%; border:0; display:block }
+.prose{ margin-top:22px; max-width:66ch; color:var(--fg2); font-size:15px; line-height:1.7 }
+.prose p + p{ margin-top:12px }
+.files{ list-style:none; margin:0; padding:0; border-top:1px solid var(--rule) }
+.files li{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:11px 2px; border-bottom:1px solid var(--rule) }
+.files a{ color:var(--fg); text-decoration:none; font-size:14px }
+.files a:hover{ color:var(--gold) }
+
+.gate2{ margin-top:20px; border:1px solid var(--goldd); border-radius:14px;
+  background:linear-gradient(140deg,#1A1710,var(--panel) 62%); padding:26px; max-width:560px }
+.gate2-ic{ display:grid; place-items:center; width:36px; height:36px; border-radius:10px;
+  background:rgb(233 196 92/12%); color:var(--gold); margin-bottom:14px }
+.gate2 b{ display:block; font-size:16px; font-weight:500 }
+.gate2 p{ margin-top:8px; color:var(--fg2); font-size:14.5px }
+.gate2 .btn{ margin-top:18px }
+
+.donebtn{ display:inline-flex; align-items:center; gap:9px; font-family:var(--disp);
+  font-size:13.5px; font-weight:500; cursor:pointer; border-radius:999px; padding:10px 18px;
+  background:transparent; border:1px solid var(--rule2); color:var(--fg2);
+  transition:border-color .15s var(--out), color .15s var(--out), background .15s var(--out) }
+.donebtn:hover{ border-color:rgb(233 196 92/45%); color:var(--fg) }
+.donebtn.on{ border-color:var(--goldd); color:var(--gold); background:rgb(233 196 92/8%) }
+.donebtn:disabled{ opacity:.6; cursor:default }
+
+.pager2{ margin-top:34px; padding-top:20px; border-top:1px solid var(--rule);
+  display:flex; justify-content:space-between; gap:20px }
+.pager2 a{ text-decoration:none; color:inherit; max-width:46% }
+.pager2 a.nx{ text-align:right; margin-left:auto }
+.pager2 span{ display:block; font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--fg3) }
+.pager2 b{ display:block; margin-top:5px; font-size:14px; font-weight:500 }
+.pager2 a:hover b{ color:var(--gold) }
+
+.sidelist{ list-style:none; margin:0; padding:0 }
+.sidelist a{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
+  text-decoration:none; color:var(--fg2); font-size:13.5px;
+  transition:background .15s var(--out), color .15s var(--out) }
+.sidelist a:hover{ background:rgb(255 255 255/4%); color:var(--fg) }
+.sidelist a.here{ background:rgb(233 196 92/9%); color:var(--fg) }
+.sidelist a.locked{ opacity:.5 }
