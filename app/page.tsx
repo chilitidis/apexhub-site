@@ -54,7 +54,7 @@ export default function Home() {
         <div className="wrap hero">
           <div className="lbl kicker rise">
             <span>TRADING</span><span className="dot"></span>
-            <span>KOINOTHTA</span><span className="dot"></span>
+            <span>ΚΟΙΝΟΤΗΤΑ</span><span className="dot"></span>
             <span>ΕΚΠΑΙΔΕΥΣΗ</span>
           </div>
           <h1><span className="w">Χτίζουμε</span><br /><span className="w"><b>ανθρώπους</b></span><br /><span className="w">με</span> <span className="w"><em>αξία.</em></span></h1>
