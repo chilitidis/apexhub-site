@@ -1,0 +1,414 @@
+/* Layout: an ascent. A hairline rail on the left marks the three pillars and
+   fills as you climb. Graphite throughout; gold is the accent of achievement,
+   borrowed from the members' platform, and it appears only where something
+   is earned. */
+:root{
+  color-scheme: dark;
+
+  --void:   #09090A;
+  --base:   #0C0C0E;
+  --panel:  #121215;
+  --panel2: #17171B;
+  --rule:   rgb(255 255 255 / 8%);
+  --rule2:  rgb(255 255 255 / 15%);
+  --fg:     #F7F8FA;
+  --fg2:    #AAAFB9;
+  --fg3:    #6B7078;
+  /* Το χρυσό του σήματος: ζεστό, κορεσμένο. Ο σκούρος τόνος είναι η σκιά του
+     ίδιου χρυσού, όχι ένα ουδέτερο καφέ — έτσι κρατάει τη θερμοκρασία του. */
+  --gold:   #E9C45C;
+  --goldd:  #8F7126;
+  --goldlo: #F3DC9A;
+
+  --disp: 'Commissioner', -apple-system, system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --gut: clamp(24px, 4vw, 72px);
+  --max: 1440px;
+  --rail: 54px;
+  --out: cubic-bezier(.23,1,.32,1);
+}
+
+*{ box-sizing:border-box }
+
+body{
+  margin:0; background:var(--base); color:var(--fg);
+  font-family:var(--disp); font-size:17px; line-height:1.6; font-weight:300;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+
+#grain{ position:fixed; inset:0; z-index:50; pointer-events:none; opacity:.035; mix-blend-mode:screen }
+
+.wrap{ max-width:var(--max); margin-inline:auto; padding-inline:var(--gut); position:relative; z-index:1 }
+
+h1,h2,h3,h4{ margin:0; font-weight:500; letter-spacing:-.025em; text-wrap:balance }
+p{ margin:0 }
+
+.lbl{ font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.2em;
+      text-transform:uppercase; color:var(--fg3) }
+.lbl b{ color:var(--goldd); font-weight:500 }
+
+/* ── rail ─────────────────────────────────────────────────────────────
+   Δεξιά και αιωρούμενο. Στα αριστερά έσπρωχνε ολόκληρη τη σελίδα μέσα με
+   padding, κι έμενε εκείνη η μαύρη λωρίδα. Εδώ δεν καταλαμβάνει χώρο
+   καθόλου: κάθεται πάνω από τη σελίδα, στο περιθώριο. */
+#rail{ position:fixed; right:0; top:0; bottom:0; width:var(--rail); z-index:15;
+       display:flex; align-items:center; justify-content:center; pointer-events:none }
+#rail .line{ position:absolute; left:50%; top:16%; bottom:16%; width:1px;
+             background:var(--rule); transform:translateX(-.5px) }
+#rail .fill{ position:absolute; left:50%; top:16%; width:1px; height:0;
+             background:linear-gradient(var(--goldd),var(--gold)); transform:translateX(-.5px);
+             transition:height .25s linear }
+#rail .stops{ position:relative; height:68%; display:flex; flex-direction:column;
+              justify-content:space-between; pointer-events:auto }
+#rail a{ display:block; writing-mode:vertical-rl;
+         font-family:var(--mono); font-size:9px; letter-spacing:.26em; text-transform:uppercase;
+         color:var(--fg3); text-decoration:none; padding:12px 0;
+         transition:color .25s var(--out) }
+#rail a:hover,#rail a.on{ color:var(--gold) }
+@media (max-width:1180px){ #rail{ display:none } }
+
+/* ── bar ──────────────────────────────────────────────────────────────── */
+.bar{ position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+      background:rgb(12 12 14 / 78%); backdrop-filter:blur(18px) saturate(1.4);
+      border-bottom:1px solid var(--rule) }
+.bar-in{ display:flex; align-items:center; gap:28px; height:68px }
+
+/* Το wordmark όπως είναι στο σήμα: «Apex» λευκό, «Hub» χρυσό, και το σήμα
+   της κορυφής δίπλα σε μέγεθος κεφαλαίου γράμματος. */
+/* Το σήμα είναι ένα διπλωμένο βουνό: δύο όψεις του ίδιου χρυσού, η μία στο
+   φως και η άλλη στη σκιά, με μια χαραγμένη βάση που διαβάζεται σαν η
+   εγκοπή του «A». Η διαφορά τόνου ανάμεσα στις δύο πλευρές είναι όλη η
+   δουλειά — χωρίς αυτήν είναι ένα τρίγωνο. Το lockup στοιβάζεται: wordmark
+   πάνω, «TRADING COMMUNITY» από κάτω, ίδιου οπτικού πλάτους. */
+.mark{ display:inline-flex; align-items:center; gap:11px; text-decoration:none; white-space:nowrap }
+.mark svg{ width:27px; height:27px; display:block; flex:none;
+           transition:transform .4s var(--out) }
+.mark:hover svg{ transform:translateY(-2px) }
+.mark .lock{ display:flex; flex-direction:column; gap:2px }
+.mark .wm{ font-family:var(--disp); font-weight:600; font-size:19.5px; letter-spacing:-.03em;
+           color:var(--fg); line-height:1 }
+.mark .wm i{ font-style:normal;
+  background:linear-gradient(145deg,var(--goldlo),var(--gold) 48%,#C09A33);
+  -webkit-background-clip:text; background-clip:text; color:transparent }
+.mark .tc{ font-family:var(--mono); font-size:7.5px; font-weight:500; letter-spacing:.34em;
+           text-transform:uppercase; color:var(--fg3); line-height:1 }
+@media (max-width:560px){ .mark .tc{ display:none } }
+.bar nav{ display:flex; gap:26px; margin-left:auto }
+.bar nav a{ color:var(--fg2); text-decoration:none; font-size:14px; transition:color .18s var(--out) }
+.bar nav a:hover{ color:var(--fg) }
+@media (max-width:900px){ .bar nav{ display:none } }
+
+/* Το magnetic γράφεται σε custom properties, όχι σε inline transform: έτσι
+   το :active μπορεί ακόμη να προσθέσει το scale του. Inline transform θα
+   νικούσε το stylesheet και το κουμπί θα έπαυε να «πατιέται». */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px;
+      border-radius:999px; padding:13px 24px; font-size:14px; font-weight:500;
+      font-family:var(--disp); text-decoration:none; white-space:nowrap; border:1px solid transparent;
+      transform:translate(var(--tx,0px),var(--ty,0px)) scale(var(--sc,1));
+      transition:transform .3s var(--out), background .18s var(--out),
+                 border-color .2s var(--out), box-shadow .3s var(--out) }
+.btn:active{ --sc:.97; transition-duration:.12s }
+.btn-solid{ background:var(--fg); color:#08090B }
+.btn-line{ border-color:var(--rule2); color:var(--fg) }
+@media (hover:hover) and (pointer:fine){
+  .btn-solid:hover{ background:#fff;
+    box-shadow:0 0 0 1px rgb(233 196 92 / 30%), 0 14px 38px -14px rgb(233 196 92 / 60%) }
+  .btn-line:hover{ background:rgb(255 255 255/5%); border-color:rgb(233 196 92 / 42%);
+    box-shadow:0 10px 32px -16px rgb(233 196 92 / 55%) }
+}
+.btn-sm{ padding:9px 17px; font-size:13px }
+a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:999px }
+
+/* ── hero ─────────────────────────────────────────────────────────────── */
+.hero{ position:relative; padding-block:clamp(36px,5vw,72px) clamp(36px,5vw,64px) }
+/* Το κείμενο σταματά πριν από τη ζώνη του γλυπτού, σε κάθε πλάτος. Το
+   40vw είναι το συντηρητικό όριο: ακόμη και στο στενότερο desktop όπου το
+   .wrap ακουμπάει το rail, η δεξιά άκρη του κειμένου μένει έξω από το 55%. */
+.hero > *{ max-width:min(640px, 44vw) }
+@media (max-width:900px){
+  .hero{ padding-top:calc(40svh + 16px) }
+  .hero > *{ max-width:none }
+}
+/* Μόνο μια ζεστή λάμψη πίσω από το κείμενο. Το ψυχρό radial που ήταν
+   δεξιά έπεφτε ακριβώς πάνω στο γλυπτό και μόλυνε το χρυσό. */
+.hero::before{ content:''; position:absolute; z-index:0; inset:-30% auto auto -25%;
+  width:90%; height:120%;
+  background:radial-gradient(56% 46% at 24% 26%, rgb(233 196 92 / 7%), transparent 70%);
+  pointer-events:none }
+.hero > *{ position:relative; z-index:1 }
+
+/* Οι ετικέτες σε μία γραμμή, αριστερά — στην ίδια κάθετη γραμμή με το
+   λογότυπο, γιατί και οι δύο ζουν μέσα στο ίδιο .wrap. */
+/* Μία γραμμή, πάντα: το nowrap χρειάζεται και χαλαρότερο όριο πλάτους,
+   αλλιώς το flex-wrap που είχε σπάσει τις ετικέτες απλώς γίνεται υπερχείλιση. */
+.kicker{ display:flex; align-items:center; gap:9px; flex-wrap:nowrap; white-space:nowrap;
+         font-size:10px; letter-spacing:.15em; max-width:none !important }
+.kicker span{ color:var(--gold) }
+.kicker .dot{ width:3px; height:3px; border-radius:50%; background:var(--goldd); flex:none }
+@media (max-width:620px){ .kicker{ font-size:9px; gap:7px } }
+
+/* Το οπτικό αριστερό περίγραμμα ενός «Χ» σε βάρος 200 κάθεται λίγο μέσα
+   από το γεωμετρικό. Το -.03em το φέρνει στη γραμμή του λογοτύπου. */
+.hero h1{ font-size:clamp(48px,7vw,106px); line-height:.94; letter-spacing:-.05em;
+          font-weight:200; margin-top:clamp(20px,3vw,34px); max-width:11ch;
+          margin-left:-.03em }
+.hero h1 b{ font-weight:800 }
+.hero h1 em{
+  font-style:normal; font-weight:800;
+  background:linear-gradient(160deg,var(--goldlo),var(--gold) 45%,#B8912F);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero .lede{ margin-top:30px; max-width:44ch; font-size:clamp(17px,2.2vw,21px);
+             color:var(--fg2); line-height:1.66 }
+.hero .ctas{ display:flex; flex-wrap:wrap; gap:12px; margin-top:38px }
+.hero .note{ margin-top:18px; font-size:13px; color:var(--fg3) }
+
+@media (prefers-reduced-motion:no-preference){
+  .rise{ opacity:0; transform:translateY(12px); animation:rise .8s var(--out) forwards }
+  .rise:nth-child(1){animation-delay:.02s} .rise:nth-child(2){animation-delay:.09s}
+  .rise:nth-child(3){animation-delay:.16s} .rise:nth-child(4){animation-delay:.23s}
+  .rise:nth-child(5){animation-delay:.30s}
+  @keyframes rise{ to{ opacity:1; transform:none } }
+}
+
+/* ── 3D σκηνή πίσω από τον hero ────────────────────────────────────────
+   Η σκηνή είναι διάκοσμος. Το κείμενο είναι το περιεχόμενο. Γι' αυτό:
+   ο καμβάς μπαίνει κάτω από ένα πέπλο που σκουραίνει την αριστερή πλευρά
+   όπου ζει ο τίτλος, και αν το WebGL δεν ξεκινήσει μένει στο μηδέν —
+   φαίνεται το gradient που υπήρχε πάντα και η σελίδα δεν το καταλαβαίνει. */
+/* Ο καμβάς ζει ΜΟΝΟ στο δεξί 45% της οθόνης. Δεν περνάει ποτέ πίσω από
+   κείμενο — όχι επειδή το σκουραίνουμε αρκετά, αλλά επειδή δεν είναι εκεί.
+   Η αριστερή του άκρη σβήνει με mask, ώστε να μην υπάρχει ραφή. */
+#sceneWrap{ position:fixed; top:0; right:0; width:45vw; height:100svh; z-index:0;
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 17%);
+          mask-image:linear-gradient(to right, transparent 0, #000 17%) }
+#scene{ width:100%; height:100%; display:block;
+        opacity:0; transition:opacity 1.4s ease }
+#scene.on{ opacity:1 }
+
+/* Το σβήσιμο όσο κατεβαίνεις: μία μεταβλητή, μία επαναβαφή το καρέ. */
+#dim{ position:fixed; inset:0; z-index:1; pointer-events:none;
+      background:var(--base); opacity:var(--dim,0) }
+
+@media (max-width:900px){
+  /* Σε κινητό το γλυπτό παίρνει τη ζώνη ΠΑΝΩ από το κείμενο. Ο hero
+     κατεβαίνει αντίστοιχα, άρα πάλι καμία επικάλυψη. */
+  #sceneWrap{ top:68px; left:0; right:0; width:100%; height:40svh;
+    -webkit-mask-image:linear-gradient(to bottom, #000 68%, transparent 100%);
+            mask-image:linear-gradient(to bottom, #000 68%, transparent 100%) }
+}
+
+main, footer{ position:relative; z-index:2 }
+/* Οι ενότητες κάτω από τον hero στέκονται πάνω στο δικό τους σκοτάδι, όχι
+   πάνω στη σκηνή — αλλιώς η σκηνή διαβάζεται σαν θόρυβος πίσω από κείμενο. */
+/* Χωρίς backdrop-filter: επτά θολωμένα στρώματα που κινούνται με το scroll
+   κοστίζουν καρέ, και το κέρδος είναι μηδενικό πάνω σε ήδη σκοτεινό φόντο. */
+section{ background:rgb(12 12 14 / 76%) }
+section.risk{ background:rgb(9 9 10 / 92%) }
+
+/* Ο τίτλος, λέξη-λέξη, από θολό σε καθαρό. Το blur μεταφέρει «έρχεται σε
+   εστίαση», όχι «πετάγεται μέσα» — τίποτα δεν αναπηδά. */
+.hero h1 .w{ display:inline-block }
+@media (prefers-reduced-motion:no-preference){
+  .hero h1 .w{ opacity:0; filter:blur(10px); transform:translateY(10px);
+               animation:focusin .9s var(--out) forwards }
+  .hero h1 .w:nth-child(1){ animation-delay:.10s }
+  .hero h1 .w:nth-child(2){ animation-delay:.22s }
+  .hero h1 .w:nth-child(3){ animation-delay:.34s }
+  .hero h1 .w:nth-child(4){ animation-delay:.42s }
+  @keyframes focusin{ to{ opacity:1; filter:blur(0); transform:none } }
+}
+
+/* ── values strip ─────────────────────────────────────────────────────── */
+.values{ border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+         display:grid; grid-template-columns:repeat(4,1fr) }
+.values div{ padding:22px 0 24px; padding-inline:20px; border-left:1px solid var(--rule);
+             font-family:var(--mono); font-size:12px; letter-spacing:.2em;
+             text-transform:uppercase; color:var(--fg2) }
+.values div:first-child{ border-left:0; padding-left:0 }
+@media (max-width:760px){ .values{ grid-template-columns:repeat(2,1fr) }
+  .values div{ border-left:0; border-top:1px solid var(--rule); padding-inline:0 }
+  .values div:nth-child(-n+2){ border-top:0 } }
+
+/* ── section frame ────────────────────────────────────────────────────── */
+section{ border-top:1px solid var(--rule); padding-block:clamp(72px,9.5vw,124px) }
+.head{ display:grid; grid-template-columns:230px 1fr; gap:46px; align-items:start }
+.head h2{ font-size:clamp(33px,4.4vw,56px); line-height:1.06; max-width:19ch; font-weight:400;
+          letter-spacing:-.032em }
+.head .sub{ margin-top:20px; color:var(--fg2); max-width:60ch }
+
+/* Ο αριθμός της ενότητας σε τεράστιο ultra-thin περίγραμμα: δίνει στην
+   τυπογραφία την αντίθεση που δεν μπορεί να δώσει το ίδιο το κείμενο, και
+   μένει κολλημένος όσο διαβάζεις την ενότητα. */
+.idx{ position:sticky; top:104px }
+.idx .num{ display:block; font-family:var(--disp); font-weight:200;
+           font-size:clamp(54px,6vw,96px); line-height:.82; letter-spacing:-.055em;
+           color:transparent; -webkit-text-stroke:1px rgb(233 196 92 / 34%) }
+.idx .lbl{ display:block; margin-top:16px; padding-top:14px;
+           border-top:1px solid rgb(233 196 92 / 26%) }
+@media (max-width:900px){
+  .head{ grid-template-columns:1fr; gap:18px }
+  .idx{ position:static; display:flex; align-items:baseline; gap:16px }
+  .idx .num{ font-size:38px }
+  .idx .lbl{ margin:0; padding:0; border:0 }
+}
+
+/* ── reveal ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion:no-preference){
+  [data-rev]{ opacity:0; transform:translateY(10px);
+              transition:opacity .7s var(--out), transform .7s var(--out) }
+  [data-rev].in{ opacity:1; transform:none }
+}
+
+/* ── φως που ακολουθεί τον κέρσορα ────────────────────────────────────
+   Όχι μεγάλα transforms: μόνο φως. Η κάρτα δεν κουνιέται, φωτίζεται. */
+.pillar,.path,.voice,.item,.card{ position:relative; overflow:hidden }
+.pillar::before,.path::before,.voice::before,.item::before,.card::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:0;
+  transition:opacity .35s var(--out);
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),
+             rgb(233 196 92 / 10%), transparent 68%) }
+.lit::before{ opacity:1 }
+.pillar > *,.path > *,.voice > *,.item > *,.card > *{ position:relative; z-index:1 }
+
+/* ── who ──────────────────────────────────────────────────────────────── */
+.who{ display:grid; grid-template-columns:1.25fr 1fr; gap:clamp(28px,5vw,64px); margin-top:46px; align-items:start }
+.who p + p{ margin-top:18px }
+.who .body{ color:var(--fg2); max-width:60ch }
+.who .body strong{ color:var(--fg); font-weight:500 }
+.roster{ border-top:1px solid var(--rule2); padding-top:4px }
+.roster .row{ display:flex; align-items:baseline; gap:14px; padding:15px 0; border-bottom:1px solid var(--rule) }
+.roster .nm{ font-size:15.5px; font-weight:400 }
+.roster .rl{ font-family:var(--mono); font-size:10.5px; letter-spacing:.17em;
+             text-transform:uppercase; color:var(--goldd); margin-left:auto; white-space:nowrap }
+@media (max-width:900px){ .who{ grid-template-columns:1fr } }
+
+/* ── pillars ──────────────────────────────────────────────────────────── */
+.pillars{ margin-top:52px; display:grid; gap:18px }
+.pillar{ position:relative; border:1px solid var(--rule); border-radius:20px;
+  background:linear-gradient(160deg,var(--panel2),var(--panel) 62%);
+  padding:clamp(26px,3.4vw,42px);
+  display:grid; grid-template-columns:auto 1fr 1.15fr; gap:clamp(20px,3.4vw,46px);
+  align-items:start; overflow:hidden; transition:border-color .25s var(--out) }
+.pillar:hover{ border-color:var(--rule2) }
+.pillar::after{ content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:linear-gradient(var(--gold),transparent 82%); opacity:.75 }
+.pillar .no{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; color:var(--goldd); padding-top:7px }
+.pillar h3{ font-size:clamp(21px,2.7vw,28px); font-weight:500; line-height:1.14 }
+.pillar .kick{ margin-top:12px; color:var(--fg2); font-size:15.5px }
+.pillar ul{ list-style:none; margin:0; padding:0; display:grid; gap:14px }
+.pillar li{ display:grid; grid-template-columns:auto 1fr; gap:13px; align-items:start }
+.pillar li .d{ width:5px; height:5px; border-radius:50%; background:var(--goldd); margin-top:9px }
+.pillar li b{ display:block; font-weight:500; font-size:15px }
+.pillar li span{ display:block; color:var(--fg2); font-size:14.5px; margin-top:3px }
+@media (max-width:900px){ .pillar{ grid-template-columns:1fr; gap:22px } .pillar .no{ padding-top:0 } }
+
+/* ── two paths: σύγκριση, όχι δύο κάρτες ──────────────────────────────
+   Δύο στήλες χωρίς πλαίσιο, χωρισμένες από μία χρυσή τρίχα. Το πλαίσιο θα
+   έλεγε «δύο προϊόντα»· η γραμμή λέει «μία απόφαση, δύο πλευρές». */
+.paths{ margin-top:56px; display:grid; grid-template-columns:1fr 1px 1fr; gap:0 }
+.paths .seam{ background:linear-gradient(transparent, var(--goldd) 14%, var(--gold) 50%,
+                                         var(--goldd) 86%, transparent) }
+.path{ border:0; background:transparent; border-radius:0;
+       padding:8px clamp(22px,3.4vw,52px); min-width:0 }
+.path:first-child{ padding-left:0 }
+.path:last-child{ padding-right:0 }
+.path .tp{ font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+           text-transform:uppercase; color:var(--goldd) }
+.path h4{ margin-top:12px; font-size:clamp(22px,2.8vw,30px); font-weight:400; letter-spacing:-.028em }
+.path ul{ list-style:none; margin:24px 0 0; padding:0; display:grid; gap:16px }
+.path li{ display:grid; grid-template-columns:auto 1fr; gap:13px; color:var(--fg2); font-size:15.2px }
+.path li .d{ width:5px; height:5px; border-radius:50%; background:var(--goldd); margin-top:9px }
+@media (max-width:760px){
+  .paths{ grid-template-columns:1fr }
+  .paths .seam{ height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent);
+                margin-block:34px }
+  .path{ padding-inline:0 }
+}
+
+/* ── voices ───────────────────────────────────────────────────────────── */
+/* Τα λόγια των μελών θέλουν μέγεθος και αέρα, όχι πλέγμα. Οριζόντιος
+   slider με snap: διαβάζεις ένα κάθε φορά, όπως γράφτηκε. */
+.voices{ margin-top:52px; display:flex; gap:18px; overflow-x:auto;
+         scroll-snap-type:x mandatory; scrollbar-width:none;
+         margin-inline:calc(-1 * var(--gut)); padding:4px var(--gut) 8px; scroll-padding-inline:var(--gut);
+         overscroll-behavior-x:contain }
+.voices::-webkit-scrollbar{ display:none }
+.swipe{ margin-top:16px; font-family:var(--mono); font-size:10.5px; letter-spacing:.2em;
+        text-transform:uppercase; color:var(--fg3) }
+.voice{ margin:0; border:1px solid var(--rule); border-radius:20px; background:var(--panel);
+        padding:clamp(28px,3.4vw,42px) clamp(26px,3vw,40px) 28px;
+        flex:0 0 min(80vw, 470px); scroll-snap-align:start;
+        display:flex; flex-direction:column;
+        transition:border-color .25s var(--out) }
+.voice:hover{ border-color:var(--rule2) }
+.voice blockquote{ margin:0; font-size:clamp(19px,2.1vw,24px); line-height:1.44; color:var(--fg);
+                   font-weight:200; letter-spacing:-.024em }
+.voice blockquote::before{ content:'«'; color:var(--goldd); margin-right:4px }
+.voice blockquote::after{ content:'»'; color:var(--goldd); margin-left:3px }
+.voice .amt{ margin-top:16px; font-family:var(--mono); font-size:15px; color:var(--gold);
+             font-variant-numeric:tabular-nums }
+.voice figcaption{ margin-top:auto; padding-top:22px; display:flex; align-items:center; gap:12px }
+.voice .av{ width:34px; height:34px; border-radius:50%; flex:none;
+            background:linear-gradient(150deg,#26262C,#141418);
+            border:1px solid var(--rule2); display:grid; place-items:center;
+            font-family:var(--mono); font-size:11px; color:var(--fg2) }
+.voice .who2{ font-size:14.5px; font-weight:500 }
+.voice .meta{ font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+              text-transform:uppercase; color:var(--fg3); margin-left:auto }
+.disclaim{ margin-top:24px; font-size:12.5px; color:var(--fg3); max-width:70ch }
+
+/* ── offer: bento ─────────────────────────────────────────────────────
+   Έξι πράγματα δεν έχουν ίδιο βάρος. Το πλέγμα το λέει πριν το διαβάσεις:
+   η VIP κοινότητα και το Journal παίρνουν τον χώρο που τους αναλογεί. */
+.offer{ margin-top:52px; display:grid; grid-template-columns:repeat(6,1fr); gap:16px }
+.item{ border:1px solid var(--rule); border-radius:18px; background:var(--panel);
+       padding:28px 26px 30px; min-width:0; display:flex; flex-direction:column;
+       transition:border-color .25s var(--out) }
+.item:hover{ border-color:var(--rule2) }
+.item .tp{ font-family:var(--mono); font-size:10.5px; letter-spacing:.18em;
+           text-transform:uppercase; color:var(--fg3) }
+.item.soon .tp{ color:var(--goldd) }
+.item h4{ margin-top:14px; font-size:18px; font-weight:500; letter-spacing:-.02em }
+.item p{ margin-top:10px; color:var(--fg2); font-size:14.5px }
+.item:nth-child(1){ grid-column:span 2 }
+.item:nth-child(2){ grid-column:span 4 }
+.item:nth-child(3){ grid-column:span 3 }
+.item:nth-child(4){ grid-column:span 3 }
+.item:nth-child(5){ grid-column:span 4 }
+.item:nth-child(6){ grid-column:span 2 }
+.item.wide{ padding:clamp(30px,3.4vw,44px) }
+.item.wide h4{ font-size:clamp(21px,2.4vw,27px); font-weight:400 }
+.item.wide p{ font-size:15.5px; max-width:46ch }
+.item.wide .tp{ color:var(--goldd) }
+@media (max-width:860px){ .offer{ grid-template-columns:1fr }
+  .item{ grid-column:auto !important } }
+
+/* ── access ───────────────────────────────────────────────────────────── */
+.access{ margin-top:46px; display:grid; gap:16px }
+.card{ border:1px solid var(--rule); border-radius:18px; background:var(--panel);
+       padding:clamp(26px,3.6vw,38px); display:grid; grid-template-columns:1fr auto;
+       gap:26px; align-items:center }
+.card.lead{ background:linear-gradient(140deg,#1A1710,var(--panel) 58%); border-color:var(--goldd) }
+.card h3{ font-size:20px; font-weight:500 }
+.card p{ margin-top:10px; color:var(--fg2); max-width:54ch; font-size:15px }
+@media (max-width:760px){ .card{ grid-template-columns:1fr } }
+
+/* ── risk ─────────────────────────────────────────────────────────────── */
+.risk{ background:var(--void) }
+.rk{ margin-top:46px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px }
+.rk > div{ border-top:2px solid var(--goldd); padding-top:18px }
+.rk .n{ font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--goldd) }
+.rk h4{ margin-top:10px; font-size:16px; font-weight:500 }
+.rk p{ margin-top:9px; color:var(--fg2); font-size:14.5px }
+.rk-foot{ margin-top:30px; color:var(--fg3); font-size:14px; max-width:70ch }
+@media (max-width:860px){ .rk{ grid-template-columns:1fr } }
+
+/* ── footer ───────────────────────────────────────────────────────────── */
+footer{ border-top:1px solid var(--rule); padding-block:42px 60px }
+.foot{ display:flex; flex-wrap:wrap; gap:18px 34px; align-items:baseline }
+.foot a{ color:var(--fg2); text-decoration:none; font-size:14px }
+.foot a:hover{ color:var(--fg) }
+.foot .cr{ margin-left:auto; font-size:13px; color:var(--fg3) }
+@media (max-width:760px){ .foot .cr{ margin-left:0; width:100% } }
