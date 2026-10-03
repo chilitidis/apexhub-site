@@ -412,3 +412,55 @@ footer{ border-top:1px solid var(--rule); padding-block:42px 60px }
 .foot a:hover{ color:var(--fg) }
 .foot .cr{ margin-left:auto; font-size:13px; color:var(--fg3) }
 @media (max-width:760px){ .foot .cr{ margin-left:0; width:100% } }
+
+/* ── σύνδεση & περιοχή μελών ───────────────────────────────────────────
+   Οι εσωτερικές σελίδες δεν έχουν τη 3D σκηνή: εκεί ο χρήστης δουλεύει, δεν
+   εντυπωσιάζεται. Μένει μόνο η παλέτα και η τυπογραφία. */
+.auth{ max-width:520px; padding-block:clamp(56px,10vh,110px) 80px; min-height:100svh }
+.auth .mark{ margin-bottom:clamp(40px,7vh,72px) }
+.auth h1{ font-size:clamp(32px,5vw,44px); font-weight:300; letter-spacing:-.04em }
+.auth .lede{ margin-top:16px; color:var(--fg2); max-width:42ch }
+.auth .tgbox{ margin-top:36px; min-height:52px }
+.auth .note{ margin-top:30px; font-size:13px; color:var(--fg3); max-width:46ch; line-height:1.6 }
+.auth .back{ display:inline-block; margin-top:44px; font-size:14px; color:var(--fg3);
+             text-decoration:none; transition:color .2s var(--out) }
+.auth .back:hover{ color:var(--fg) }
+
+.gate{ margin-top:30px; border:1px solid var(--goldd); border-radius:18px;
+       background:linear-gradient(140deg,#1A1710,var(--panel) 62%); padding:26px 24px 28px }
+.gate h2{ font-size:19px; font-weight:500 }
+.gate p{ margin-top:10px; color:var(--fg2); font-size:15px }
+.gate p + p{ margin-top:12px }
+.gate .btn{ margin-top:20px }
+
+/* ── η διασταύρωση ─────────────────────────────────────────────────────
+   Η πρώτη πόρτα παίρνει διπλό πλάτος επειδή είναι ο λόγος που μπήκε. */
+.hub{ padding-block:clamp(40px,6vh,72px) 100px; min-height:100svh }
+.hub-top{ display:flex; align-items:flex-end; justify-content:space-between;
+          gap:24px; flex-wrap:wrap; margin-bottom:clamp(36px,6vh,64px) }
+.hub-top h1{ margin-top:14px; font-size:clamp(28px,4.4vw,44px); font-weight:300;
+             letter-spacing:-.04em }
+
+.doors{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px }
+.door{ position:relative; display:flex; flex-direction:column;
+       border:1px solid var(--rule); border-radius:20px; background:var(--panel);
+       padding:clamp(26px,3vw,38px); text-decoration:none; color:inherit;
+       transition:border-color .25s var(--out), background .25s var(--out) }
+.door:hover{ border-color:var(--rule2); background:var(--panel2) }
+.door.lead{ grid-column:span 2;
+            background:linear-gradient(140deg,#1A1710,var(--panel) 58%);
+            border-color:var(--goldd) }
+.door.off{ opacity:.5 }
+.door .tp{ font-family:var(--mono); font-size:10.5px; letter-spacing:.18em;
+           text-transform:uppercase; color:var(--goldd) }
+.door h3{ margin-top:14px; font-size:clamp(19px,2.2vw,24px); font-weight:500;
+          letter-spacing:-.022em }
+.door p{ margin-top:10px; color:var(--fg2); font-size:15px; max-width:48ch }
+.door .go{ margin-top:auto; padding-top:24px; font-family:var(--mono); font-size:11px;
+           letter-spacing:.16em; text-transform:uppercase; color:var(--fg3);
+           transition:color .2s var(--out) }
+.door:hover .go{ color:var(--gold) }
+@media (max-width:760px){
+  .doors{ grid-template-columns:1fr }
+  .door.lead{ grid-column:auto }
+}
