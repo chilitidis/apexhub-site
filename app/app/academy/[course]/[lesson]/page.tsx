@@ -4,6 +4,7 @@ import { currentSession } from '@/lib/session';
 import { viewerOf, lessonBySlug } from '@/lib/academy';
 import { ILock, ICheck, IPlay } from '@/components/Icons';
 import DoneButton from '@/components/DoneButton';
+import { vimeoSrc } from '@/lib/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ export default async function LessonPage({
         ) : lesson.vimeo_id ? (
           <div className="player2">
             <iframe
-              src={`https://player.vimeo.com/video/${lesson.vimeo_id}?color=E9C45C&title=0&byline=0&portrait=0&dnt=1`}
+              src={vimeoSrc(lesson.vimeo_id)}
               title={lesson.title}
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen

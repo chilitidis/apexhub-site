@@ -266,3 +266,83 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .sidelist a:hover{ background:rgb(255 255 255/4%); color:var(--fg) }
 .sidelist a.here{ background:rgb(233 196 92/9%); color:var(--fg) }
 .sidelist a.locked{ opacity:.5 }
+
+/* ── διαχείριση ─────────────────────────────────────────────────────── */
+.adm-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:20px;
+           flex-wrap:wrap }
+.adm-head .sub a{ color:var(--fg3); text-decoration:none }
+.adm-head .sub a:hover{ color:var(--gold) }
+
+.adm-new{ display:flex; gap:8px; margin-top:20px; flex-wrap:wrap }
+.adm-new.sm{ margin-top:12px }
+.adm-new input{ flex:1; min-width:180px; background:rgb(255 255 255/4%);
+  border:1px solid var(--rule); border-radius:9px; padding:9px 12px;
+  color:var(--fg); font-family:var(--disp); font-size:13.5px }
+.adm-new input:focus{ outline:none; border-color:rgb(233 196 92/45%) }
+
+.adm-list{ list-style:none; margin:18px 0 0; padding:0; display:grid; gap:8px }
+.adm-list > li > a, .adm-row{ display:flex; align-items:center; gap:14px;
+  border:1px solid var(--rule); border-radius:11px; background:var(--panel);
+  padding:13px 15px; text-decoration:none; color:inherit;
+  transition:border-color .15s var(--out) }
+.adm-list > li > a:hover{ border-color:var(--rule2) }
+.adm-t{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0 }
+.adm-t b{ font-size:14.5px; font-weight:500 }
+.adm-t em{ font-style:normal; font-size:12px; color:var(--fg3) }
+
+.pill{ font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase;
+  padding:3px 8px; border-radius:5px; border:1px solid var(--rule2); color:var(--fg3); white-space:nowrap }
+.pill.published{ color:var(--gold); border-color:var(--goldd) }
+.pill.free{ color:#8FD6A8; border-color:#2E5B3E }
+
+.adm-mod, .adm-les{ border:1px solid var(--rule); border-radius:11px; background:var(--panel);
+  margin-bottom:9px }
+.adm-les{ margin:9px 0 0; background:rgb(255 255 255/2%) }
+.adm-mod > summary, .adm-les > summary{ display:flex; align-items:center; gap:12px;
+  padding:12px 14px; cursor:pointer; list-style:none; font-size:14px }
+.adm-mod > summary::-webkit-details-marker, .adm-les > summary::-webkit-details-marker{ display:none }
+.adm-mod > summary b{ flex:1; font-weight:500 }
+.adm-les > summary span:first-child{ flex:1 }
+.adm-mod > *:not(summary), .adm-les > *:not(summary){ margin:0 14px 12px }
+
+.fm{ display:grid; gap:11px }
+.fm-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:11px }
+.fm label{ display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--fg3) }
+.fm label.chk{ flex-direction:row; align-items:center; gap:8px; font-size:13px; color:var(--fg2) }
+.fm input[type=text], .fm input:not([type]), .fm input[type=number], .fm select, .fm textarea{
+  background:rgb(255 255 255/4%); border:1px solid var(--rule); border-radius:8px;
+  padding:8px 11px; color:var(--fg); font-family:var(--disp); font-size:13.5px }
+.fm textarea{ resize:vertical; line-height:1.55 }
+.fm input:focus, .fm select:focus, .fm textarea:focus{ outline:none; border-color:rgb(233 196 92/45%) }
+.fm-file input[type=file]{ font-size:12px; color:var(--fg3) }
+.fm-cover{ margin-top:8px; width:160px; border-radius:8px; border:1px solid var(--rule) }
+.fm-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+.filerow a{ color:var(--fg2); font-size:13px }
+
+.mini{ border:1px solid var(--rule2); background:transparent; color:var(--fg2);
+  border-radius:8px; padding:7px 13px; font-size:12.5px; cursor:pointer; font-family:var(--disp);
+  transition:border-color .15s var(--out), color .15s var(--out) }
+.mini:hover{ border-color:rgb(233 196 92/45%); color:var(--gold) }
+.danger{ border:1px solid rgb(224 101 106/35%); background:transparent; color:#E0656A;
+  border-radius:8px; padding:7px 13px; font-size:12.5px; cursor:pointer; font-family:var(--disp) }
+.danger:hover{ border-color:#E0656A }
+
+.acc{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px;
+  padding:11px 14px; border:1px dashed var(--rule2); border-radius:10px }
+.acc-l{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--fg3) }
+.acc label{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--fg2) }
+
+/* ── αλλαγή σειράς ──────────────────────────────────────────────────── */
+.reorder ol{ list-style:none; margin:0 0 10px; padding:0; display:grid; gap:5px }
+.reorder li{ display:flex; align-items:center; gap:11px; padding:9px 12px;
+  border:1px solid var(--rule); border-radius:9px; background:var(--panel);
+  font-size:13.5px; cursor:grab }
+.reorder li.dragging{ opacity:.45; border-color:var(--goldd) }
+.reorder .grip{ color:var(--fg3); letter-spacing:-2px }
+.reorder .rl{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.reorder .arrows{ display:flex; gap:4px }
+.reorder .arrows button{ width:24px; height:24px; border-radius:6px; border:1px solid var(--rule2);
+  background:transparent; color:var(--fg2); cursor:pointer; font-size:11px }
+.reorder .arrows button:disabled{ opacity:.3; cursor:default }
+.reorder .arrows button:hover:not(:disabled){ color:var(--gold); border-color:var(--goldd) }
