@@ -12,7 +12,7 @@
 | `APEX_SESSION_SECRET` | *(δημιούργησέ το, δες παρακάτω)* | Υπογράφει το cookie της συνεδρίας. |
 | `NEXT_PUBLIC_SITE_URL` | `https://apexhub.gr` | Πού επιστρέφει το Telegram μετά τη σύνδεση. |
 | `NEXT_PUBLIC_PORTAL_URL` | `https://portal.apexhub.gr` | Ο σύνδεσμος προς το back office. |
-| `NEXT_PUBLIC_JOURNAL_URL` | *(το URL του Journal)* | Ο σύνδεσμος προς το Ultimate Trading Journal. Αν λείπει, η κάρτα εμφανίζεται ως «συνδέεται σύντομα» αντί να σπάσει. |
+| `NEXT_PUBLIC_JOURNAL_URL` | `https://ultimatradingjournal.com` | Ο σύνδεσμος προς το Ultimate Trading Journal. Αν λείπει, η κάρτα εμφανίζεται ως «συνδέεται σύντομα» αντί να σπάσει. |
 
 ## Το μυστικό της συνεδρίας
 

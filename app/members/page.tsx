@@ -20,7 +20,7 @@ export default function Members() {
   // Το middleware έχει ήδη δει το cookie· εδώ ελέγχουμε την ΥΠΟΓΡΑΦΗ του.
   if (!s) redirect('/login');
 
-  const journal = process.env.NEXT_PUBLIC_JOURNAL_URL;
+  const journal = process.env.NEXT_PUBLIC_JOURNAL_URL ?? 'https://ultimatradingjournal.com';
   const portal = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://portal.apexhub.gr';
   const first = s.name.split(' ')[0];
 
