@@ -28,23 +28,37 @@ export default function Crumbs() {
   const path = usePathname();
   const parts = path.split('/').filter(Boolean);
 
-  /* Οι τίτλοι μαθήματος και lesson δεν υπάρχουν στη διαδρομή — μόνο τα slug.
-     Τους ζητάμε μία φορά ανά σελίδα· μέχρι να έρθουν, δείχνουμε το slug σε
-     αναγνώσιμη μορφή, ώστε να μη «χοροπηδάει» η μπάρα. */
+  /**
+   * Οι τίτλοι μαθήματος και lesson δεν υπάρχουν στη διαδρομή — μόνο τα slug.
+   * Τους ζητάμε μία φορά ανά σελίδα· μέχρι να έρθουν, δείχνουμε το slug σε
+   * αναγνώσιμη μορφή, ώστε να μη «χοροπηδάει» η μπάρα.
+   *
+   * ΠΡΟΣΟΧΗ ΣΤΙΣ ΕΞΑΡΤΗΣΕΙΣ. Η πρώτη εκδοχή είχε στον πίνακα το `parts`, που
+   * είναι ΝΕΟΣ πίνακας σε κάθε render. Το effect ξανάτρεχε, καλούσε setTitles,
+   * το νέο state προκαλούσε render, ο πίνακας ήταν πάλι νέο αντικείμενο — και
+   * από εκεί ατέρμονος βρόχος που κρέμαγε όλη τη σελίδα. Η εξάρτηση πρέπει να
+   * είναι το `path`, που είναι συμβολοσειρά και συγκρίνεται κατ' αξία.
+   */
   const [titles, setTitles] = useState<Record<string, string>>({});
-  const [course, lesson] = [parts[2], parts[3]];
 
   useEffect(() => {
-    if (parts[1] !== 'academy' || !course) { setTitles({}); return; }
-    const p = new URLSearchParams({ course });
-    if (lesson) p.set('lesson', lesson);
+    const seg = path.split('/').filter(Boolean);
+    if (seg[1] !== 'academy' || !seg[2]) {
+      /* Μόνο αν ΟΝΤΩΣ υπάρχει κάτι να καθαρίσει. Ένα setTitles({}) χωρίς
+         έλεγχο είναι νέο αντικείμενο κάθε φορά, δηλαδή νέο render. */
+      setTitles((t) => (Object.keys(t).length ? {} : t));
+      return;
+    }
+    const q = new URLSearchParams({ course: seg[2] });
+    if (seg[3]) q.set('lesson', seg[3]);
+
     let alive = true;
-    fetch(`/api/crumbs?${p}`)
+    fetch(`/api/crumbs?${q}`)
       .then((r) => (r.ok ? r.json() : {}))
       .then((d) => { if (alive) setTitles(d); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [parts, course, lesson]);
+  }, [path]);
 
   const crumbs = parts.map((seg, i) => ({
     label: titles[seg] ?? pretty(seg),

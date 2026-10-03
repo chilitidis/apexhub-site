@@ -56,12 +56,18 @@ export function SectionProgress({ slugs }: { slugs: string[] }) {
   const [n, setN] = useState(0);
   const [ready, setReady] = useState(false);
 
+  /* Η εξάρτηση είναι ΣΥΜΒΟΛΟΣΕΙΡΑ, όχι ο πίνακας. Ένας πίνακας-prop είναι νέο
+     αντικείμενο σε κάθε render του γονιού· ως εξάρτηση θα ξανάστηνε τον
+     ακροατή ασταμάτητα. Το ίδιο λάθος κρέμασε ολόκληρη την πλατφόρμα μία φορά. */
+  const key = slugs.join('|');
+
   useEffect(() => {
-    const calc = () => { const s = read(); setN(slugs.filter((x) => s.has(x)).length); setReady(true); };
+    const list = key ? key.split('|') : [];
+    const calc = () => { const s = read(); setN(list.filter((x) => s.has(x)).length); setReady(true); };
     calc();
     window.addEventListener('apex-progress', calc);
     return () => window.removeEventListener('apex-progress', calc);
-  }, [slugs]);
+  }, [key]);
 
   if (!ready) return null;
   return (
