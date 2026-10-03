@@ -370,3 +370,12 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .card2:focus-visible, .donebtn:focus-visible, .mini:focus-visible,
 .sidelist a:focus-visible, .notes a:focus-visible{
   outline:2px solid var(--gold); outline-offset:2px; border-radius:9px }
+
+/* ── όριο σφάλματος ─────────────────────────────────────────────────── */
+.errbox{ border:1px solid rgb(224 101 106/40%); border-radius:14px;
+  background:rgb(224 101 106/6%); padding:24px; max-width:620px }
+.errbox b{ display:block; font-size:16px; font-weight:500; color:#E0656A }
+.errbox p{ margin-top:9px; color:var(--fg2); font-size:14px; line-height:1.6;
+  word-break:break-word }
+.errbox code{ display:inline-block; margin-top:10px; font-family:var(--mono);
+  font-size:11px; color:var(--fg3) }
