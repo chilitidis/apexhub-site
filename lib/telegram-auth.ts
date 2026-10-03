@@ -29,9 +29,15 @@ const MAX_AGE_SECONDS = 86400;
 
 export function verifyTelegramAuth(
   data: Record<string, unknown>,
-  botToken: string,
+  rawToken: string,
   now: number = Date.now(),
 ): { ok: true; user: TelegramUser } | { ok: false; reason: string } {
+  /* ΤΟ TRIM ΔΕΝ ΕΙΝΑΙ ΚΑΛΛΩΠΙΣΜΟΣ. Μια επικόλληση σε πεδίο μεταβλητής
+     περιβάλλοντος κουβαλάει συχνά αλλαγή γραμμής ή κενό. Το SHA256 του token
+     αλλάζει ολόκληρο από έναν αόρατο χαρακτήρα, η υπογραφή δεν βγαίνει ποτέ,
+     και το μήνυμα που βλέπει ο χρήστης λέει «μη έγκυρη υπογραφή» — που είναι
+     αληθινό και εντελώς παραπλανητικό. Ώρες χαμένες για ένα \n. */
+  const botToken = (rawToken ?? '').trim();
   if (!botToken) return { ok: false, reason: 'Λείπει το TELEGRAM_BOT_TOKEN.' };
 
   const hash = typeof data.hash === 'string' ? data.hash : '';
@@ -88,9 +94,11 @@ export function verifyTelegramAuth(
  */
 export async function isGroupMember(
   telegramId: number,
-  botToken: string,
-  chatId: string,
+  rawToken: string,
+  rawChat: string,
 ): Promise<{ ok: true; member: boolean } | { ok: false; reason: string }> {
+  const botToken = (rawToken ?? '').trim();
+  const chatId = (rawChat ?? '').trim();
   if (!botToken || !chatId) return { ok: false, reason: 'Λείπει ρύθμιση Telegram.' };
 
   let res: Response;
