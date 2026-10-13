@@ -98,6 +98,44 @@ export interface CourseView extends Course {
   lessons: number; done: number; locked: boolean; minutes: number;
 }
 
+/**
+ * =============================================================================
+ * ΤΟ 404 ΣΤΑ ΕΛΛΗΝΙΚΑ SLUGS
+ * =============================================================================
+ *
+ * ΤΟ ΣΦΑΛΜΑ: τα slugs των μαθημάτων είναι ελληνικά — `οι-4-συνεδριες`,
+ * `τι-ειναι-το-forex`. Ο browser ΔΕΝ στέλνει ποτέ ελληνικά γράμματα στη
+ * διαδρομή· τα στέλνει ως percent-encoding: `%CE%BF%CE%B9-4-%CF%83...`.
+ * Το `params.lesson` του App Router φτάνει εδώ έτσι όπως ήρθε στο δίκτυο,
+ * δηλαδή κωδικοποιημένο. Η σύγκριση `l.slug === lessonSlug` έβγαζε λοιπόν
+ * πάντα ψέμα και η σελίδα κατέληγε σε `notFound()`.
+ *
+ * ΓΙΑΤΙ ΤΟ ΕΙΔΑΜΕ ΜΟΝΟ ΤΩΡΑ: όσο τα slugs ήταν λατινικά (`spread`,
+ * `stop-loss`) κωδικοποιημένη και ακατέργαστη μορφή ήταν ταυτόσημες. Τα
+ * 404 εμφανίστηκαν την ημέρα που μπήκαν τα πρώτα ελληνικά μαθήματα.
+ *
+ * ΓΙΑΤΙ ΔΕΝ ΑΛΛΑΖΟΥΜΕ ΤΑ SLUGS ΣΕ ΛΑΤΙΝΙΚΑ: το `slugify()` του admin κρατά
+ * ελληνικά εσκεμμένα, ώστε οι διευθύνσεις να διαβάζονται. Αν το λύναμε με
+ * μεταγραφή, το σφάλμα θα επέστρεφε στο επόμενο ελληνικό μάθημα που θα
+ * έφτιαχνε ο admin από το πάνελ.
+ *
+ * ΤΟ NFC: στο macOS το ίδιο ελληνικό κείμενο γράφεται και με χωριστούς
+ * τόνους (NFD). Δύο μορφές που δείχνουν ίδιες αλλά δεν είναι ίσες ως
+ * strings. Κανονικοποιούμε και τις δύο πλευρές στην ίδια μορφή.
+ */
+export function urlSlug(raw: string): string {
+  let s = raw;
+  if (s.includes('%')) {
+    try {
+      s = decodeURIComponent(s);
+    } catch {
+      /* Κακοσχηματισμένο encoding: κρατάμε το ακατέργαστο και αφήνουμε τη
+         σύγκριση να αποτύχει καθαρά, αντί να πετάξουμε 500. */
+    }
+  }
+  return s.normalize('NFC');
+}
+
 /** Ο κατάλογος, με πρόοδο και κλειδώματα υπολογισμένα. */
 export async function catalogue(v: Viewer): Promise<CourseView[]> {
   const s = db();
@@ -133,8 +171,9 @@ export async function catalogue(v: Viewer): Promise<CourseView[]> {
 }
 
 /** Ένα μάθημα με τις ενότητες και τα lessons του, κλειδώματα υπολογισμένα. */
-export async function courseBySlug(v: Viewer, slug: string) {
+export async function courseBySlug(v: Viewer, rawSlug: string) {
   const s = db();
+  const slug = urlSlug(rawSlug);
   const { data: c } = await s.from('courses').select('*').eq('slug', slug).maybeSingle();
   if (!c) return null;
   const course = c as unknown as Course;
@@ -190,7 +229,8 @@ export async function lessonBySlug(v: Viewer, courseSlug: string, lessonSlug: st
   if (!full) return null;
 
   const flat = full.modules.flatMap((m) => m.items.map((l) => ({ ...l, moduleTitle: m.title })));
-  const idx = flat.findIndex((l) => l.slug === lessonSlug);
+  const want = urlSlug(lessonSlug);
+  const idx = flat.findIndex((l) => urlSlug(l.slug) === want);
   if (idx < 0) return null;
 
   const head = flat[idx];
