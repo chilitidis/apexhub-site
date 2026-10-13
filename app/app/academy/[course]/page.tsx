@@ -15,6 +15,26 @@ export default async function CoursePage({ params }: { params: { course: string 
 
   const { course, modules, total, done } = data;
 
+  /**
+   * ΧΩΡΙΣ ΕΝΔΙΑΜΕΣΗ ΣΕΛΙΔΑ.
+   *
+   * Το μάθημα ανοίγει κατευθείαν στο πρώτο βίντεο. Η λίστα των μαθημάτων δεν
+   * χάνεται: υπάρχει ολόκληρη στο πλάι της σελίδας του μαθήματος, οπότε η
+   * σελίδα περιγραφής ήταν ένα κλικ που δεν έδινε τίποτα παραπάνω.
+   *
+   * ΟΙ ΔΥΟ ΕΞΑΙΡΕΣΕΙΣ, που γι' αυτές μένει ο κώδικας από κάτω:
+   *   · Μάθημα χωρίς περιεχόμενο ακόμη — δεν υπάρχει πού να πάμε.
+   *   · Κλειδωμένο μάθημα — ο χρήστης πρέπει να δει ΓΙΑΤΙ δεν έχει πρόσβαση,
+   *     όχι να πεταχτεί σε ένα κλειδωμένο βίντεο.
+   *
+   * Το `encodeURIComponent` δεν είναι διακοσμητικό: τα slugs είναι ελληνικά
+   * και το `Location` ενός redirect ΠΡΕΠΕΙ να φύγει κωδικοποιημένο.
+   */
+  const first = modules.flatMap((m) => m.items)[0];
+  if (first && !data.locked) {
+    redirect(`/app/academy/${encodeURIComponent(course.slug)}/${encodeURIComponent(first.slug)}`);
+  }
+
   return (
     <>
       <h1 className="h1">
