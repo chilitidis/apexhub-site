@@ -242,8 +242,44 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .gate2 p{ margin-top:8px; color:var(--fg2); font-size:14.5px }
 .gate2 .btn{ margin-top:18px }
 
+/* ─── Κάρτα τέλους μαθήματος ─────────────────────────────────────────────
+   Το ύφος της τελευταίας σκηνής του βίντεο, ώστε η μετάβαση από το βίντεο
+   στην άσκηση να μη μοιάζει με αλλαγή εφαρμογής. Σκούρο ναυτικό φόντο, λεπτό
+   χρυσό πλέγμα, ένα και μόνο κουμπί. */
+.endcard{ position:relative; margin-top:34px; border-radius:16px; overflow:hidden;
+  background:#0D1524; border:1px solid rgb(233 196 92/18%) }
+.endcard-grid{ position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgb(233 196 92/5%) 1px, transparent 1px),
+                   linear-gradient(90deg, rgb(233 196 92/5%) 1px, transparent 1px);
+  background-size:46px 46px;
+  /* Το πλέγμα σβήνει προς τις άκρες: γεμάτο μέχρι το περίγραμμα θα έμοιαζε
+     με λογιστικό φύλλο, όχι με σκηνή. */
+  -webkit-mask-image:radial-gradient(ellipse at center, #000 35%, transparent 78%);
+          mask-image:radial-gradient(ellipse at center, #000 35%, transparent 78%) }
+.endcard-in{ position:relative; display:grid; justify-items:center; text-align:center;
+  gap:14px; padding:clamp(36px,6vw,64px) 24px }
+.endcard-kick{ font-family:var(--mono); font-size:10.5px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold) }
+.endcard-in h2{ margin:0; font-family:var(--disp); font-weight:600;
+  font-size:clamp(26px,4.4vw,40px); line-height:1.12; letter-spacing:-.02em;
+  color:#EEF1F6; text-wrap:balance }
+.endcard-in p{ margin:0; max-width:46ch; color:#A9B3C6; font-size:15px; line-height:1.55 }
+.endcard-go{ margin-top:10px; cursor:pointer; border:0; border-radius:999px;
+  font-family:var(--disp); font-size:15px; font-weight:600; padding:14px 30px;
+  color:#0D1524; background:linear-gradient(145deg,var(--goldlo),var(--gold) 55%,#C09A33);
+  transition:transform .15s var(--out), filter .15s var(--out) }
+.endcard-go:hover{ filter:brightness(1.07) }
+.endcard-go:active{ transform:translateY(1px) }
+.endcard-go span{ display:inline-block; margin-left:4px;
+  transition:transform .15s var(--out) }
+.endcard-go:hover span{ transform:translateX(3px) }
+.endcard-meta{ font-family:var(--mono); font-size:11px; color:#6F7A90 }
+@media (prefers-reduced-motion:reduce){
+  .endcard-go, .endcard-go span{ transition:none }
+}
+
 /* ─── Τεστ μαθήματος ─────────────────────────────────────────────────────── */
-.quiz{ margin-top:34px }
+.quiz{ margin-top:34px; scroll-margin-top:76px }
 .quiz .sub{ max-width:620px }
 .qlist{ list-style:none; margin:18px 0 0; padding:0; display:grid; gap:26px; counter-reset:q }
 .qitem{ counter-increment:q }

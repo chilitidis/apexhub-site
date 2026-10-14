@@ -42,11 +42,18 @@ export default function Quiz({
      υπάρχει γιατί χωρίς αυτό το «Ξανά» θα επέστρεφε στην ίδια γραμμή: το
      `passed` δεν παύει να ισχύει επειδή ο χρήστης θέλει επανάληψη. */
   const [again, setAgain] = useState(false);
+  /* Κλειστό μέχρι να το ζητήσει ο χρήστης. Βλ. την κάρτα τέλους πιο κάτω. */
+  const [open, setOpen] = useState(false);
   const [, start] = useTransition();
   const router = useRouter();
 
   const total = questions.length;
   const unanswered = picks.filter((p) => p === null).length;
+
+  /* Το scroll γίνεται ΜΕΤΑ το render του τεστ, αλλιώς κυνηγάει στοιχείο που
+     δεν υπάρχει ακόμη στη σελίδα. */
+  const jump = () => requestAnimationFrame(() =>
+    document.getElementById(`quiz-${quizId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   async function submit() {
     setErr(null);
@@ -90,6 +97,40 @@ export default function Quiz({
           <button type="button" className="btn" onClick={() => { setAgain(true); retry(); }}>
             Ξανά
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Η ΚΑΡΤΑ ΤΕΛΟΥΣ ΜΑΘΗΜΑΤΟΣ.
+   *
+   * Το τεστ δεν κρέμεται από κάτω σαν παράρτημα. Τελειώνει το βίντεο, πέφτει
+   * η κάρτα, πατάς ένα κουμπί. Είναι βήμα, όχι υποσημείωση — και φαίνεται.
+   *
+   * ΜΕΧΡΙ ΤΟ ΚΛΙΚ ΟΙ ΕΡΩΤΗΣΕΙΣ ΔΕΝ ΜΠΑΙΝΟΥΝ ΚΑΝ ΣΤΗ ΣΕΛΙΔΑ. Είκοσι σειρές
+   * με radio buttons κάτω από κάθε βίντεο κάνουν τη σελίδα να μοιάζει με
+   * ερωτηματολόγιο· έτσι η σελίδα του μαθήματος είναι το μάθημα.
+   */
+  if (!open) {
+    return (
+      <div className="endcard" id={`quiz-${quizId}`}>
+        <div className="endcard-grid" aria-hidden="true" />
+        <div className="endcard-in">
+          <span className="endcard-kick">Τέλος μαθήματος</span>
+          <h2>Επόμενο βήμα: Άσκηση</h2>
+          <p>
+            {needed} σωστές από {total}. Χωρίς αυτό δεν ξεκλειδώνει το επόμενο μάθημα
+            {nextTitle ? <>, «{nextTitle}»</> : null}.
+          </p>
+          <button type="button" className="endcard-go" onClick={() => { setOpen(true); jump(); }}>
+            Πήγαινε στην άσκηση <span aria-hidden="true">→</span>
+          </button>
+          {attempts > 0 && (
+            <span className="endcard-meta">
+              {attempts === 1 ? 'Μία προσπάθεια μέχρι τώρα' : `${attempts} προσπάθειες μέχρι τώρα`}
+            </span>
+          )}
         </div>
       </div>
     );
