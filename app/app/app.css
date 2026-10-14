@@ -242,6 +242,54 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .gate2 p{ margin-top:8px; color:var(--fg2); font-size:14.5px }
 .gate2 .btn{ margin-top:18px }
 
+/* ─── Τεστ μαθήματος ─────────────────────────────────────────────────────── */
+.quiz{ margin-top:34px }
+.quiz .sub{ max-width:620px }
+.qlist{ list-style:none; margin:18px 0 0; padding:0; display:grid; gap:26px; counter-reset:q }
+.qitem{ counter-increment:q }
+.qitem h3{ font-size:15.5px; font-weight:500; line-height:1.45; margin:0 0 12px;
+  display:flex; gap:11px; align-items:baseline }
+.qitem h3::before{ content:counter(q) "."; font-family:var(--mono); font-size:12px;
+  color:var(--fg3); flex:none }
+.qopts{ display:grid; gap:8px; max-width:620px }
+/* Η επιλογή είναι ολόκληρη στόχος κλικ, όχι μόνο το κουμπάκι: στο κινητό ένα
+   radio 16 pixel είναι στόχος που αστοχείς. */
+.qopt{ display:flex; gap:11px; align-items:flex-start; cursor:pointer;
+  border:1px solid var(--rule2); border-radius:11px; padding:12px 15px; font-size:14.5px;
+  transition:border-color .15s var(--out), background .15s var(--out) }
+.qopt:hover{ border-color:rgb(233 196 92/35%) }
+.qopt input{ margin-top:3px; accent-color:var(--gold); flex:none }
+.qopt.on{ border-color:var(--goldd); background:rgb(233 196 92/7%) }
+.qopt.right{ border-color:rgb(74 201 126/55%); background:rgb(74 201 126/9%) }
+.qopt.wrong{ border-color:rgb(226 110 98/55%); background:rgb(226 110 98/9%) }
+.qopt:has(input:disabled){ cursor:default }
+.qopt:has(input:disabled):hover{ border-color:var(--rule2) }
+.qopt.right:has(input:disabled):hover{ border-color:rgb(74 201 126/55%) }
+.qopt.wrong:has(input:disabled):hover{ border-color:rgb(226 110 98/55%) }
+.qwhy{ margin:10px 0 0; max-width:620px; font-size:13.5px; color:var(--fg2);
+  border-left:2px solid var(--goldd); padding-left:12px }
+.qerr{ margin-top:16px; font-size:14px; color:#E26E62 }
+.qactions{ margin-top:26px; display:flex; align-items:center; gap:16px; flex-wrap:wrap }
+
+.quiz-done, .qresult{ margin-top:22px; display:flex; align-items:flex-start; gap:16px;
+  border:1px solid var(--rule2); border-radius:14px; padding:20px 22px; max-width:620px }
+.quiz-done b, .qresult b{ display:block; font-size:15.5px; font-weight:500 }
+.quiz-done p, .qresult p{ margin-top:6px; color:var(--fg2); font-size:14px }
+.quiz-done .btn, .qresult .btn{ margin-left:auto; flex:none; align-self:center }
+.quiz-ic{ display:grid; place-items:center; width:32px; height:32px; border-radius:9px;
+  flex:none; background:rgb(233 196 92/12%); color:var(--gold) }
+.qresult.ok{ border-color:rgb(74 201 126/45%); background:rgb(74 201 126/7%) }
+.qresult.ok .quiz-ic{ background:rgb(74 201 126/14%); color:#4AC97E }
+.quiz-done{ border-color:rgb(74 201 126/45%); background:rgb(74 201 126/7%) }
+.quiz-done .quiz-ic{ background:rgb(74 201 126/14%); color:#4AC97E }
+.qresult.no{ border-color:rgb(226 110 98/45%); background:rgb(226 110 98/7%) }
+.qresult.no .quiz-ic{ background:rgb(226 110 98/14%); color:#E26E62 }
+
+@media (max-width:620px){
+  .quiz-done, .qresult{ flex-wrap:wrap }
+  .quiz-done .btn, .qresult .btn{ margin-left:0; width:100% }
+}
+
 .donebtn{ display:inline-flex; align-items:center; gap:9px; font-family:var(--disp);
   font-size:13.5px; font-weight:500; cursor:pointer; border-radius:999px; padding:10px 18px;
   background:transparent; border:1px solid var(--rule2); color:var(--fg2);

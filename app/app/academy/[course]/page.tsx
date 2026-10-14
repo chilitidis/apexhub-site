@@ -74,9 +74,9 @@ export default async function CoursePage({ params }: { params: { course: string 
               {m.items.map((l) => (
                 <li key={l.id}>
                   <Link href={`/app/academy/${course.slug}/${l.slug}`}
-                        className={l.locked ? 'lk locked' : 'lk'}>
+                        className={l.locked || l.gated ? 'lk locked' : 'lk'}>
                     <span className="lk-ic">
-                      {l.locked ? <ILock /> : l.done ? <ICheck /> : <IPlay />}
+                      {l.locked || l.gated ? <ILock /> : l.quizPassed || l.done ? <ICheck /> : <IPlay />}
                     </span>
                     <span className="lk-t">
                       <b>{l.title}</b>

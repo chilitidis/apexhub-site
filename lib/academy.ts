@@ -1,5 +1,6 @@
 import 'server-only';
 import { db } from './db';
+import { lessonsWithQuiz, passedLessons } from './quiz';
 
 /**
  * =============================================================================
@@ -87,7 +88,21 @@ function allowed(v: Viewer, req: Set<string> | undefined): boolean {
 }
 
 export interface LessonView extends Omit<Lesson, 'vimeo_id' | 'body'> {
+  /** Κλειδωμένο γιατί δεν το καλύπτει το πακέτο του μέλους. */
   locked: boolean;
+  /**
+   * Κλειδωμένο γιατί δεν έχει περάσει το τεστ του ΠΡΟΗΓΟΥΜΕΝΟΥ μαθήματος.
+   *
+   * Ξεχωριστό πεδίο από το `locked` επειδή είναι ΤΕΛΕΙΩΣ άλλο πρόβλημα για τον
+   * χρήστη: το ένα λύνεται με αναβάθμιση πακέτου, το άλλο με δέκα λεπτά
+   * διάβασμα. Ένα κοινό λουκέτο με το ίδιο μήνυμα θα έστελνε κόσμο να πληρώσει
+   * για κάτι που ήδη έχει.
+   */
+  gated: boolean;
+  /** Το μάθημα που πρέπει να ολοκληρώσει πρώτα. Μόνο όταν `gated`. */
+  gatedBy?: { slug: string; title: string };
+  hasQuiz: boolean;
+  quizPassed: boolean;
   done: boolean;
   /** Μόνο αν ΔΕΝ είναι κλειδωμένο. Αλλιώς δεν φεύγει ποτέ από τον server. */
   vimeo_id?: string | null;
@@ -207,6 +222,7 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
             title: l.title, summary: l.summary, duration_sec: l.duration_sec,
             sort: l.sort, status: l.status, is_free: l.is_free,
             locked, done: doneSet.has(l.id),
+            gated: false, hasQuiz: false, quizPassed: false,
           };
           return out;
         });
@@ -214,6 +230,56 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
     });
 
   const all = modules.flatMap((m) => m.items);
+
+  /**
+   * ==========================================================================
+   * ΣΕΙΡΙΑΚΟ ΚΛΕΙΔΩΜΑ
+   * ==========================================================================
+   *
+   * Ο ΚΑΝΟΝΑΣ: ένα μάθημα ανοίγει όταν έχει περαστεί το τεστ του αμέσως
+   * προηγούμενου. Το πρώτο μάθημα είναι πάντα ανοιχτό — δεν υπάρχει
+   * προηγούμενο.
+   *
+   * ΑΝ ΤΟ ΠΡΟΗΓΟΥΜΕΝΟ ΔΕΝ ΕΧΕΙ ΤΕΣΤ, ΔΕΝ ΜΠΛΟΚΑΡΕΙ. Όσο ανεβαίνει υλικό, θα
+   * υπάρχουν μαθήματα που περιμένουν ακόμη τις ερωτήσεις τους. Ένα τέτοιο
+   * μάθημα δεν επιτρέπεται να σταματήσει ολόκληρη τη σειρά: ο χρήστης θα
+   * έβλεπε λουκέτο χωρίς τρόπο να το ανοίξει, και θα το ανέφερε ως βλάβη.
+   *
+   * ΜΟΛΙΣ ΤΟ ΚΛΕΙΔΩΜΑ ΠΙΑΣΕΙ, ΠΙΑΝΕΙ ΓΙΑ ΟΛΑ ΤΑ ΕΠΟΜΕΝΑ. Αν άνοιγε κάθε
+   * μάθημα ανεξάρτητα, όποιος περνούσε το τεστ του 1 θα έβλεπε το 2 — αλλά και
+   * όποιος κολλούσε στο 2 θα έφτανε στο 3 από τη λίστα στο πλάι.
+   *
+   * Ο ΔΙΑΧΕΙΡΙΣΤΗΣ ΔΕΝ ΜΠΛΟΚΑΡΕΤΑΙ ΠΟΤΕ: πρέπει να μπορεί να ελέγξει το
+   * μάθημα 9 χωρίς να περάσει οκτώ τεστ.
+   */
+  if (!v.admin && all.length > 1) {
+    const ids = all.map((l) => l.id);
+    const [withQuiz, passed] = await Promise.all([
+      lessonsWithQuiz(ids),
+      passedLessons(v.tid, ids),
+    ]);
+
+    let blocker: LessonView | null = null;
+    for (const l of all) {
+      l.hasQuiz = withQuiz.has(l.id);
+      l.quizPassed = passed.has(l.id);
+
+      if (blocker) {
+        l.gated = true;
+        l.gatedBy = { slug: blocker.slug, title: blocker.title };
+      } else if (l.hasQuiz && !l.quizPassed) {
+        blocker = l;        // από το ΕΠΟΜΕΝΟ και κάτω, όλα κλειστά
+      }
+    }
+  } else {
+    const ids = all.map((l) => l.id);
+    const [withQuiz, passed] = await Promise.all([
+      lessonsWithQuiz(ids),
+      passedLessons(v.tid, ids),
+    ]);
+    for (const l of all) { l.hasQuiz = withQuiz.has(l.id); l.quizPassed = passed.has(l.id); }
+  }
+
   return {
     course,
     modules,
@@ -238,7 +304,9 @@ export async function lessonBySlug(v: Viewer, courseSlug: string, lessonSlug: st
   let vimeo: string | null = null;
   let files: LessonFile[] = [];
 
-  if (!head.locked) {
+  /* `gated` όπως και `locked`: αν δεν δικαιούται να το δει, το vimeo_id δεν
+     φεύγει από τον server. Το κλείδωμα δεν είναι διακοσμητικό CSS. */
+  if (!head.locked && !head.gated) {
     const { data: l } = await db().from('lessons')
       .select('body, vimeo_id').eq('id', head.id).maybeSingle();
     body = (l as { body: string | null } | null)?.body ?? null;
