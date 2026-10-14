@@ -3,51 +3,128 @@
    Πυκνότητα εργαλείου, όχι landing page: μικρότεροι τίτλοι, σφιχτά κενά,
    μία μόνο έμφαση ανά οθόνη. Ίδια παλέτα και γραμματοσειρές με το site.
    ═══════════════════════════════════════════════════════════════════════ */
-:root{ --navw:260px; --navw-sm:72px; --tbh:56px }
+:root{ --navw:244px; --navw-sm:68px; --tbh:58px }
 
-.shell{ display:flex; min-height:100svh; background:var(--base) }
+/* ═══════════════════════════════════════════════════════════════════════
+   ΠΑΛΕΤΑ ΤΗΣ ΠΛΑΤΦΟΡΜΑΣ
+   ═══════════════════════════════════════════════════════════════════════
+   Τα tokens ορίζονται ΕΔΩ, στο `.shell`, και όχι στο `:root` του globals.
+   Το ίδιο αρχείο μεταβλητών σερβίρει και τη δημόσια σελίδα· αν τα άλλαζα
+   εκεί, το redesign της πλατφόρμας θα ξαναέβαφε και τη landing page που
+   κανείς δεν ζήτησε να αλλάξει.
+
+   Ο ΧΡΥΣΟΣ ΜΕ ΦΕΙΔΩ. Το `--gold` είναι ήρεμο (#C9A24A) και χρησιμοποιείται
+   για κείμενο και εικονίδια. Το `--goldgrad` είναι το λαμπερό, και μπαίνει
+   το πολύ σε δύο σημεία ανά σελίδα: το κύριο κουμπί και η πρόοδος. Χρυσός
+   παντού δεν είναι πολυτέλεια — είναι κιτς.
+   ═══════════════════════════════════════════════════════════════════════ */
+.shell{
+  --base:   #0A0A0B;
+  --panel:  #121214;
+  --panel2: #18181B;
+  --rule:   rgb(255 255 255 / 6%);
+  --rule2:  rgb(255 255 255 / 12%);
+  /* Το hairline: χρυσό στο 25%, για διαχωριστικά που μόλις που διακρίνονται. */
+  --hair:   rgb(201 162 74 / 25%);
+  --fg:     #F2EFE8;          /* ζεστό off-white· το καθαρό λευκό «κόβει» */
+  --fg2:    #8E8A82;
+  --fg3:    #6A6660;
+  --gold:   #C9A24A;
+  --goldlo: #E6C873;
+  --goldd:  #A87B2A;
+  --goldgrad: linear-gradient(135deg, #E6C873, #A87B2A);
+  --serif: var(--font-serif), 'Noto Serif Display', Georgia, 'Times New Roman', serif;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+.shell{ position:relative; display:flex; min-height:100svh; background:var(--base);
+        color:var(--fg) }
+
+/* ── υφή και φως ──────────────────────────────────────────────────────
+   Δύο στρώσεις πάνω από το μαύρο, καμία τους δεν πιάνει κλικ:
+
+   1. Ο ΚΟΚΚΟΣ στο 3%. Σε μεγάλες μαύρες επιφάνειες η οθόνη δείχνει
+      banding στις βαθμιδώσεις· ο θόρυβος το σπάει. Είναι SVG σε data-URI
+      και όχι canvas: δεν χρειάζεται JavaScript και δεν ξαναζωγραφίζεται.
+   2. ΤΟ ΧΡΥΣΟ ΦΩΣ πάνω αριστερά, από εκεί που θα έμπαινε ο ήλιος σε ένα
+      γραφείο. Πολύ απαλό — αν το προσέξεις, είναι πολύ δυνατό. */
+.shell::before, .shell::after{ content:''; position:fixed; inset:0; pointer-events:none }
+.shell::before{ z-index:1; opacity:.03; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E") }
+.shell::after{ z-index:0;
+  background:radial-gradient(820px 520px at 12% -6%, rgb(201 162 74 / 7%), transparent 68%) }
+.shell > *{ position:relative; z-index:2 }
+
 .shell-main{ flex:1; min-width:0; display:flex; flex-direction:column }
-.shell-body{ flex:1; padding:clamp(20px,2.4vw,34px) clamp(18px,2.6vw,38px) 72px; min-width:0 }
+/* Γενναιόδωρα κενά: 64px σε desktop, 24px σε κινητό. Ο αέρας είναι το
+   φθηνότερο υλικό πολυτέλειας που υπάρχει. */
+.shell-body{ flex:1; min-width:0;
+  padding:clamp(28px,3.4vw,52px) clamp(24px,4.4vw,64px) 96px }
+
+/* ── τυπογραφία ──────────────────────────────────────────────────────── */
+.display{ font-family:var(--serif); font-weight:400; letter-spacing:-.01em;
+  line-height:1.1; color:var(--fg); margin:0; text-wrap:balance }
+/* Το μικρό χρυσό label: ΣΥΝΕΧΙΣΕ, Η ΠΡΟΟΔΟΣ ΣΟΥ. Χωρίς τόνους — τα ελληνικά
+   κεφαλαία δεν τονίζονται, και ένα «Η ΠΡΌΟΔΟΣ ΣΟΥ» το προδίδει αμέσως. */
+.eyebrow{ display:block; font-size:11px; font-weight:500; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--gold); font-variant-numeric:tabular-nums }
+.num{ font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1 }
+
+/* Κανένα υπογραμμισμένο, κανένα μπλε link πουθενά στην πλατφόρμα. */
+.shell a{ color:inherit; text-decoration:none }
+.shell a:hover{ color:var(--gold) }
+.hair{ height:1px; border:0; margin:0; background:var(--hair); opacity:.55 }
 
 /* ── sidebar ────────────────────────────────────────────────────────── */
 .nav{ position:sticky; top:0; align-self:flex-start; height:100svh; flex:0 0 var(--navw);
       width:var(--navw); display:flex; flex-direction:column;
-      background:#0A0A0C; border-right:1px solid var(--rule);
-      transition:flex-basis .18s var(--out), width .18s var(--out) }
+      background:#09090A; border-right:1px solid var(--rule);
+      transition:flex-basis .25s var(--ease), width .25s var(--ease) }
 .nav-narrow{ flex-basis:var(--navw-sm); width:var(--navw-sm) }
 
-.nav-brand{ display:flex; align-items:center; gap:10px; padding:20px 18px 22px;
+.nav-brand{ display:flex; align-items:center; gap:11px; padding:26px 20px 30px;
             text-decoration:none; color:inherit }
-.nav-brand svg{ width:24px; height:24px; flex:none }
-.nav-word{ font-weight:600; font-size:17px; letter-spacing:-.03em; white-space:nowrap }
+.nav-brand svg{ width:22px; height:22px; flex:none }
+.nav-word{ font-family:var(--serif); font-weight:400; font-size:19px;
+  letter-spacing:.005em; white-space:nowrap }
 .nav-word i{ font-style:normal; color:var(--gold) }
 .nav-narrow .nav-word{ display:none }
 
-.nav-list{ display:flex; flex-direction:column; gap:2px; padding:0 10px; flex:1; overflow-y:auto }
-.nav-item{ position:relative; display:flex; align-items:center; gap:12px;
-  padding:10px 12px; border-radius:10px; text-decoration:none; color:var(--fg2);
-  font-size:14.5px; white-space:nowrap;
-  transition:background .15s var(--out), color .15s var(--out) }
-.nav-item:hover{ background:rgb(255 255 255/4%); color:var(--fg) }
-/* Η ενεργή: λεπτή χρυσή ένδειξη αριστερά και ελάχιστα φωτεινότερο φόντο. */
-.nav-item.on{ background:rgb(255 255 255/6%); color:var(--fg) }
-.nav-item.on::before{ content:''; position:absolute; left:-10px; top:9px; bottom:9px;
+.nav-list{ display:flex; flex-direction:column; gap:1px; padding:0 12px; flex:1; overflow-y:auto }
+.nav-item{ position:relative; display:flex; align-items:center; gap:13px;
+  padding:10px 12px; border-radius:8px; text-decoration:none; color:var(--fg2);
+  font-size:14px; white-space:nowrap;
+  transition:background .25s var(--ease), color .25s var(--ease) }
+.nav-item:hover{ background:rgb(255 255 255/3%); color:var(--fg) }
+/* Η ΕΝΕΡΓΗ ΕΠΙΛΟΓΗ: λεπτή χρυσή γραμμή αριστερά και ελάχιστα φωτεινότερο
+   φόντο — όχι γεμάτο κουτί. Το κουτί φωνάζει «κουμπί»· η γραμμή λέει απλώς
+   «εδώ είσαι», που είναι όλη η δουλειά της. */
+.nav-item.on{ background:rgb(255 255 255/4%); color:var(--fg) }
+.nav-item.on::before{ content:''; position:absolute; left:-12px; top:8px; bottom:8px;
   width:2px; border-radius:0 2px 2px 0; background:var(--gold) }
-.nav-ico{ flex:none; opacity:.9 }
+.nav-ico{ flex:none; width:17px; height:17px; opacity:.72 }
+.nav-item:hover .nav-ico{ opacity:1 }
 .nav-item.on .nav-ico{ color:var(--gold); opacity:1 }
 .nav-ext{ width:13px; height:13px; margin-left:auto; opacity:.5 }
 .nav-narrow .nav-item span,
 .nav-narrow .nav-ext{ display:none }
 .nav-narrow .nav-item{ justify-content:center; padding-inline:0 }
 
-.nav-foot{ position:relative; padding:14px 12px 16px; border-top:1px solid var(--rule) }
-.nav-me{ display:flex; align-items:center; gap:10px; padding:4px 4px 12px }
-.nav-me img, .nav-av{ width:32px; height:32px; border-radius:50%; flex:none; object-fit:cover }
-.nav-av{ display:grid; place-items:center; background:linear-gradient(150deg,#26262C,#141418);
-         border:1px solid var(--rule2); font-size:13px; color:var(--fg2) }
-.nav-who{ min-width:0; display:flex; flex-direction:column; line-height:1.3 }
-.nav-who b{ font-size:13.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.nav-who em{ font-style:normal; font-size:11px; color:var(--fg3) }
+.nav-foot{ position:relative; padding:18px 14px 20px; border-top:1px solid var(--hair) }
+.nav-me{ display:flex; align-items:center; gap:11px; padding:2px 2px 14px }
+.nav-me img, .nav-av{ width:34px; height:34px; border-radius:50%; flex:none; object-fit:cover }
+.nav-me img{ border:1px solid rgb(201 162 74/28%) }
+.nav-av{ display:grid; place-items:center; background:linear-gradient(150deg,#232327,#141417);
+         border:1px solid rgb(201 162 74/28%); font-family:var(--serif); font-size:14px;
+         color:var(--gold) }
+.nav-who{ min-width:0; display:flex; flex-direction:column; gap:4px; line-height:1.25 }
+.nav-who b{ font-size:13.5px; font-weight:400; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap }
+/* Το πακέτο μέλους: χρυσό label, όχι γκρι υπότιτλος. Είναι το ένα πράγμα
+   που θέλει να βλέπει το μέλος όταν κοιτάζει το όνομά του. */
+.nav-tier{ align-self:flex-start; font-size:9.5px; font-weight:500; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); border:1px solid rgb(201 162 74/30%);
+  border-radius:4px; padding:2px 7px; white-space:nowrap }
 .nav-narrow .nav-who{ display:none }
 .nav-out{ width:100%; border:1px solid var(--rule2); background:transparent; color:var(--fg2);
   border-radius:9px; padding:8px; font-size:12.5px; cursor:pointer; font-family:var(--disp);
@@ -100,32 +177,43 @@
 .topsearch input:focus{ outline:none; border-color:rgb(233 196 92/45%); background:rgb(255 255 255/6%) }
 @media (max-width:620px){ .topsearch{ display:none } }
 
-/* ── τυπογραφία εργαλείου ───────────────────────────────────────────── */
-.h1{ font-size:clamp(21px,2.3vw,27px); font-weight:500; letter-spacing:-.025em }
-.h2{ font-size:16px; font-weight:500; letter-spacing:-.015em }
-.sub{ margin-top:5px; color:var(--fg2); font-size:14px }
-.sec{ margin-top:clamp(26px,3vw,40px) }
-.sec-top{ display:flex; align-items:baseline; justify-content:space-between; gap:16px;
-          margin-bottom:12px }
-.sec-top h2{ font-size:13px; font-weight:500; letter-spacing:.1em; text-transform:uppercase;
-             color:var(--fg3); font-family:var(--mono) }
-.sec-top a{ font-size:13px; color:var(--fg3); text-decoration:none }
+/* ── τυπογραφία ─────────────────────────────────────────────────────── */
+.h1{ font-family:var(--serif); font-weight:400; letter-spacing:-.01em; line-height:1.1;
+     font-size:clamp(32px,4.6vw,56px) }
+.h2{ font-family:var(--serif); font-weight:400; font-size:19px; letter-spacing:-.005em;
+     line-height:1.25 }
+.sub{ margin-top:12px; color:var(--fg2); font-size:15.5px; line-height:1.6; max-width:58ch }
+.sec{ margin-top:clamp(40px,5vw,72px) }
+/* Το label κάθεται ΠΑΝΩ από το μπλοκ, όχι σε αριστερή στήλη: κάθε ενότητα
+   της σελίδας διαβάζεται από πάνω προς τα κάτω σαν σελίδα βιβλίου. */
+.sec-top{ display:flex; align-items:baseline; justify-content:space-between; gap:18px;
+          margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--hair) }
+.sec-top h2{ font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+             color:var(--gold); font-family:var(--disp); margin:0 }
+.sec-top a{ font-size:13px; color:var(--fg2); text-decoration:none }
 .sec-top a:hover{ color:var(--gold) }
 
-/* ── κάρτες ─────────────────────────────────────────────────────────── */
-.card2{ border:1px solid var(--rule); border-radius:14px; background:var(--panel);
-        padding:18px; transition:border-color .15s var(--out), background .15s var(--out) }
-a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
-.grid{ display:grid; gap:14px }
-.g3{ grid-template-columns:repeat(auto-fill,minmax(270px,1fr)) }
+/* ── κάρτες ───────────────────────────────────────────────────────────
+   Στο hover ανεβαίνουν 2 pixel και το περίγραμμα γίνεται χρυσό. Δύο pixel
+   είναι αρκετά για να «απαντήσει» η κάρτα· περισσότερα και αρχίζει να
+   αναπηδά, που είναι άλλο ύφος. */
+.card2{ border:1px solid var(--rule); border-radius:16px; background:var(--panel);
+        padding:22px; box-shadow:0 1px 2px rgb(0 0 0/30%), 0 8px 24px rgb(0 0 0/18%);
+        transition:border-color .25s var(--ease), transform .25s var(--ease),
+                   box-shadow .25s var(--ease), background .25s var(--ease) }
+a.card2:hover{ border-color:rgb(201 162 74/30%); background:var(--panel2);
+  transform:translateY(-2px); box-shadow:0 2px 4px rgb(0 0 0/34%), 0 16px 36px rgb(0 0 0/26%) }
+.grid{ display:grid; gap:18px }
+.g3{ grid-template-columns:repeat(auto-fill,minmax(282px,1fr)) }
 .g2{ grid-template-columns:repeat(auto-fill,minmax(320px,1fr)) }
+@media (prefers-reduced-motion:reduce){ a.card2:hover{ transform:none } }
 
 /* ── πρόοδος ────────────────────────────────────────────────────────── */
-.bar{ height:3px; border-radius:3px; background:rgb(255 255 255/9%); overflow:hidden }
-.bar span{ display:block; height:100%; background:linear-gradient(90deg,var(--goldd),var(--gold));
-           transition:width .3s var(--out) }
-.meta{ font-family:var(--mono); font-size:11px; color:var(--fg3);
-       font-variant-numeric:tabular-nums }
+.bar{ height:2px; border-radius:2px; background:rgb(255 255 255/8%); overflow:hidden }
+.bar span{ display:block; height:100%; background:var(--goldgrad);
+           transition:width .4s var(--ease) }
+.meta{ font-size:12px; color:var(--fg2); font-variant-numeric:tabular-nums;
+       letter-spacing:.01em }
 
 /* ── κενές καταστάσεις ──────────────────────────────────────────────── */
 .empty2{ border:1px dashed var(--rule2); border-radius:14px; padding:40px 24px;
@@ -144,7 +232,95 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
   text-transform:uppercase; color:#0C0C0E; background:var(--gold);
   border-radius:4px; padding:2px 6px; vertical-align:middle }
 
-/* ── αρχική ─────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   ΑΡΧΙΚΗ
+   ══════════════════════════════════════════════════════════════════════ */
+.hero{ max-width:62ch; padding-bottom:4px }
+
+/* ── το cover: βαθμίδα με τον τίτλο σε serif ──────────────────────────
+   ΓΙΑΤΙ ΟΧΙ ΠΡΑΓΜΑΤΙΚΟ THUMBNAIL ΤΟΥ ΒΙΝΤΕΟ: τα βίντεο στο Vimeo είναι
+   «Embed only» και κλειδωμένα στο domain μας. Η εικόνα προεπισκόπησης
+   περνάει από τρίτη διαδρομή που μπορεί να μη φορτώσει — και ένα σπασμένο
+   εικονίδιο εικόνας σε μια σελίδα που φιλοδοξεί να δείχνει ακριβή είναι
+   χειρότερο από το να μην υπάρχει εικόνα καθόλου. Η βαθμίδα με τον τίτλο
+   δουλεύει πάντα, φορτώνει αμέσως και δεν ξεχνιέται ποτέ να ενημερωθεί. */
+.cover-art{ position:absolute; inset:0; display:grid; place-items:center;
+  padding:26px; text-align:center;
+  background:
+    radial-gradient(120% 95% at 20% 4%, rgb(201 162 74/22%), transparent 58%),
+    radial-gradient(90% 70% at 92% 104%, rgb(168 123 42/14%), transparent 60%),
+    linear-gradient(152deg, #22221F, #0E0E10 70%) }
+.cover-art::after{ content:''; position:absolute; inset:0;
+  background-image:linear-gradient(rgb(201 162 74/4%) 1px, transparent 1px),
+                   linear-gradient(90deg, rgb(201 162 74/4%) 1px, transparent 1px);
+  background-size:38px 38px;
+  -webkit-mask-image:radial-gradient(ellipse at center, #000 30%, transparent 76%);
+          mask-image:radial-gradient(ellipse at center, #000 30%, transparent 76%) }
+.cover-art > span{ position:relative; z-index:1; font-family:var(--serif); font-weight:400;
+  font-size:clamp(19px,2.3vw,27px); line-height:1.18; letter-spacing:-.01em;
+  color:var(--fg); text-wrap:balance;
+  text-shadow:0 1px 18px rgb(0 0 0/55%) }
+
+/* ── κάρτα «Συνέχισε» ─────────────────────────────────────────────── */
+.resume2{ display:grid; grid-template-columns:minmax(0,340px) 1fr; gap:clamp(22px,3vw,40px);
+  align-items:center; border:1px solid var(--rule); border-radius:16px;
+  background:var(--panel); padding:clamp(18px,2.2vw,26px);
+  box-shadow:0 1px 2px rgb(0 0 0/30%), 0 10px 30px rgb(0 0 0/20%) }
+.resume2-cover{ position:relative; display:block; aspect-ratio:16/9; border-radius:12px;
+  overflow:hidden; border:1px solid var(--rule) }
+.resume2-play{ position:absolute; inset:0; display:grid; place-items:center;
+  color:var(--fg); opacity:0; transition:opacity .25s var(--ease);
+  background:rgb(10 10 11/42%) }
+.resume2-cover:hover .resume2-play{ opacity:1 }
+.resume2-body{ min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:14px }
+.eyebrow.sm{ font-size:10px; letter-spacing:.22em }
+.resume2-title{ font-size:clamp(22px,2.6vw,30px) }
+.resume2-prog{ width:100%; max-width:340px; display:flex; flex-direction:column; gap:9px }
+
+/* Το ΕΝΑ λαμπερό κουμπί της σελίδας. */
+.gold-btn{ display:inline-flex; align-items:center; gap:9px; margin-top:4px;
+  border:0; border-radius:999px; cursor:pointer; font-family:var(--disp);
+  font-size:14.5px; font-weight:600; padding:13px 26px; color:#0A0A0B;
+  background:var(--goldgrad); text-decoration:none;
+  transition:filter .25s var(--ease), transform .25s var(--ease) }
+.gold-btn:hover{ filter:brightness(1.08); color:#0A0A0B }
+.gold-btn:active{ transform:translateY(1px) }
+.gold-btn span{ transition:transform .25s var(--ease) }
+.gold-btn:hover span{ transform:translateX(3px) }
+
+@media (max-width:760px){
+  .resume2{ grid-template-columns:1fr; gap:20px }
+  .resume2-body{ gap:12px }
+}
+@media (prefers-reduced-motion:reduce){
+  .gold-btn, .gold-btn span, .resume2-play{ transition:none }
+}
+
+/* ── δαχτυλίδι και ανάλυση ανά ενότητα ───────────────────────────────── */
+.prog2{ display:flex; align-items:center; gap:clamp(26px,4vw,56px); flex-wrap:wrap;
+  border:1px solid var(--rule); border-radius:16px; background:var(--panel);
+  padding:clamp(22px,2.6vw,32px) }
+.ring{ position:relative; flex:none }
+.ring-in{ position:absolute; inset:0; display:grid; place-content:center; justify-items:center;
+  gap:3px; text-align:center }
+.ring-in b{ font-family:var(--serif); font-weight:400; font-size:28px; line-height:1;
+  color:var(--fg) }
+.ring-in b i{ font-style:normal; font-size:15px; color:var(--gold); margin-left:1px }
+.ring-in span{ font-size:11px; color:var(--fg2) }
+.prog2-list{ list-style:none; margin:0; padding:0; flex:1; min-width:260px;
+  display:flex; flex-direction:column }
+.prog2-list li + li{ border-top:1px solid var(--rule) }
+.prog2-list a{ display:grid; grid-template-columns:minmax(0,1fr) minmax(70px,130px) auto;
+  align-items:center; gap:18px; padding:11px 2px; font-size:14.5px;
+  transition:color .25s var(--ease) }
+.prog2-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.prog2-bar{ display:block }
+@media (max-width:560px){
+  .prog2-list a{ grid-template-columns:1fr auto; gap:6px 14px }
+  .prog2-bar{ grid-column:1 / -1 }
+}
+
+/* ── παλιά κάρτα «Συνέχισε» (παραμένει για άλλες σελίδες) ───────────── */
 .resume{ display:flex; align-items:center; gap:14px }
 .resume-ico{ flex:none; width:38px; height:38px; border-radius:10px; display:grid;
   place-items:center; background:rgb(233 196 92/12%); color:var(--gold) }
@@ -153,11 +329,21 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .resume-txt b{ font-size:15px; font-weight:500 }
 .resume .meta{ margin-left:auto; white-space:nowrap }
 .prog-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px }
-.quick{ display:flex; align-items:center; gap:13px; color:inherit; text-decoration:none }
-.quick > svg{ flex:none; color:var(--goldd) }
-.quick span{ display:flex; flex-direction:column; gap:2px }
-.quick b{ font-size:14.5px; font-weight:500 }
-.quick em{ font-style:normal; font-size:12.5px; color:var(--fg3) }
+.quick{ display:flex; align-items:center; gap:16px; color:inherit; text-decoration:none }
+.quick > svg{ flex:none; width:20px; height:20px; color:var(--gold); opacity:.85 }
+.quick span{ display:flex; flex-direction:column; gap:4px }
+.quick b{ font-family:var(--serif); font-size:17px; font-weight:400; letter-spacing:-.005em }
+.quick em{ font-style:normal; font-size:13.5px; color:var(--fg2) }
+a.quick:hover{ color:inherit }
+a.quick:hover b{ color:var(--gold) }
+
+/* ── κενές καταστάσεις, ξανά ─────────────────────────────────────────── */
+.empty2{ border:1px solid var(--rule); border-radius:16px; padding:clamp(34px,5vw,56px) 28px;
+  text-align:center; color:var(--fg2); font-size:14.5px; line-height:1.65;
+  background:rgb(255 255 255/1.5%) }
+.empty2 b{ display:block; font-family:var(--serif); font-weight:400; color:var(--fg);
+  margin-bottom:8px; font-size:19px }
+.empty2 a{ color:var(--gold) }
 
 /* ── ενσωματωμένα εργαλεία ──────────────────────────────────────────── */
 .frame-embed{ margin-top:20px; border:1px solid var(--rule); border-radius:14px;
@@ -169,33 +355,72 @@ a.card2:hover{ border-color:var(--rule2); background:var(--panel2) }
 .kv dt{ font-size:12.5px; color:var(--fg3) }
 .kv dd{ margin:0; font-size:14px }
 
-/* ── φίλτρα ─────────────────────────────────────────────────────────── */
-.chips2{ display:flex; flex-wrap:wrap; gap:7px; margin-top:18px }
-.chip{ font-size:12.5px; color:var(--fg2); text-decoration:none;
-  border:1px solid var(--rule); border-radius:999px; padding:6px 13px;
-  transition:border-color .15s var(--out), color .15s var(--out), background .15s var(--out) }
-.chip:hover{ border-color:var(--rule2); color:var(--fg) }
-.chip.on{ border-color:var(--goldd); color:var(--gold); background:rgb(233 196 92/8%) }
-.chip.clear{ color:var(--fg3); border-style:dashed }
+/* ══════════════════════════════════════════════════════════════════════
+   ΑΚΑΔΗΜΙΑ
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ── κάρτα μαθήματος ────────────────────────────────────────────────── */
+/* ── segmented control ───────────────────────────────────────────────
+   Ένα πλαίσιο με χωρίσματα, όχι σκόρπια pills: τα επίπεδα είναι μία
+   επιλογή ανάμεσα σε λίγες, και το σχήμα πρέπει να το λέει. */
+.seg{ display:inline-flex; margin-top:26px; padding:3px; border-radius:11px;
+  background:rgb(255 255 255/3%); border:1px solid var(--rule); gap:2px; flex-wrap:wrap }
+.seg a{ display:inline-flex; align-items:center; border-radius:8px; padding:8px 17px;
+  font-size:13.5px; color:var(--fg2); white-space:nowrap;
+  transition:background .25s var(--ease), color .25s var(--ease) }
+.seg a:hover{ color:var(--fg) }
+.seg a.on{ background:rgb(201 162 74/13%); color:var(--gold);
+  box-shadow:inset 0 0 0 1px rgb(201 162 74/26%) }
+
+.level + .level{ margin-top:clamp(44px,5vw,76px) }
+.sub-top{ margin-top:28px }
+.sub-top h2{ color:var(--fg2) }
+.tracks{ margin-top:4px }
+
+/* ── κλειδωμένο επίπεδο ──────────────────────────────────────────────── */
+.locked-level{ display:flex; align-items:center; gap:18px; border:1px dashed var(--rule2);
+  border-radius:16px; padding:clamp(24px,3vw,34px); color:var(--fg2) }
+.locked-ic{ flex:none; display:grid; place-items:center; width:42px; height:42px;
+  border-radius:11px; background:rgb(201 162 74/9%); color:var(--gold) }
+.locked-level b{ display:block; color:var(--fg) }
+.locked-level p{ margin-top:6px; font-size:14px }
+
+/* ── κάρτα ενότητας ──────────────────────────────────────────────────── */
 .card2.course{ padding:0; overflow:hidden; display:flex; flex-direction:column;
                text-decoration:none; color:inherit }
-.course-cover{ position:relative; aspect-ratio:16/9; background:
-  linear-gradient(145deg,#15161B,#0C0C0E); display:grid; place-items:center;
+.course-cover{ position:relative; display:block; aspect-ratio:16/9; overflow:hidden;
   border-bottom:1px solid var(--rule) }
 .course-cover img{ width:100%; height:100%; object-fit:cover; display:block }
-.course-mark{ font-weight:600; font-size:17px; letter-spacing:-.03em; color:var(--fg3) }
-.course-mark i{ font-style:normal; color:var(--goldd) }
-.course.locked .course-cover{ filter:blur(2px) saturate(.6); opacity:.65 }
-.lockpill, .draftpill{ position:absolute; top:10px; right:10px; display:grid; place-items:center;
-  padding:5px 7px; border-radius:7px; background:rgb(12 12 14/88%);
-  border:1px solid var(--rule2); color:var(--gold) }
-.draftpill{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--fg2); right:auto; left:10px }
-.course-body{ padding:14px 15px 16px; display:flex; flex-direction:column; gap:7px; flex:1 }
-.course-sub{ font-size:12.5px; color:var(--fg2) }
-.course-body .bar{ margin-top:auto }
+.course.locked .course-cover{ filter:saturate(.45); opacity:.5 }
+.lockpill, .draftpill{ position:absolute; top:12px; right:12px; z-index:2;
+  display:grid; place-items:center; padding:6px 8px; border-radius:8px;
+  background:rgb(10 10 11/80%); backdrop-filter:blur(6px);
+  border:1px solid rgb(201 162 74/26%); color:var(--gold) }
+.draftpill{ font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--fg2); border-color:var(--rule2); right:auto; left:12px }
+.course-body{ padding:20px 20px 22px; display:flex; flex-direction:column; gap:8px; flex:1 }
+.course-sub{ font-size:13.5px; color:var(--fg2); line-height:1.5 }
+.course-facts{ margin-top:2px }
+.course-prog{ margin-top:auto; padding-top:16px; display:flex; align-items:center; gap:12px }
+.course-prog .bar{ flex:1 }
+a.card2.course:hover b.h2{ color:var(--gold) }
+
+/* ── η κάρτα του τελικού τεστ ────────────────────────────────────────── */
+.finalcard{ display:flex; align-items:center; gap:18px; margin-top:18px;
+  border:1px solid rgb(201 162 74/22%); border-radius:16px; padding:22px 24px;
+  background:linear-gradient(135deg, rgb(201 162 74/7%), transparent 58%), var(--panel);
+  transition:border-color .25s var(--ease), transform .25s var(--ease) }
+.finalcard:hover{ border-color:rgb(201 162 74/45%); transform:translateY(-2px); color:inherit }
+.finalcard:hover b{ color:var(--gold) }
+.finalcard-ic{ flex:none; display:grid; place-items:center; width:44px; height:44px;
+  border-radius:12px; background:rgb(201 162 74/12%); color:var(--gold) }
+.finalcard-txt{ display:flex; flex-direction:column; gap:6px; min-width:0; flex:1 }
+.finalcard-txt em{ font-style:normal; font-size:13.5px; color:var(--fg2) }
+.finalcard > .meta{ flex:none; white-space:nowrap }
+@media (max-width:620px){
+  .finalcard{ flex-wrap:wrap }
+  .finalcard > .meta{ width:100%; }
+}
+@media (prefers-reduced-motion:reduce){ .finalcard:hover{ transform:none } }
 
 /* ── σελίδα μαθήματος ───────────────────────────────────────────────── */
 .coursehead{ margin-top:18px; display:flex; align-items:center; justify-content:space-between; gap:18px }

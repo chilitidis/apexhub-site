@@ -102,7 +102,7 @@ export default function AppSidebar({
               : <span className="nav-av">{(name || '?').trim().charAt(0).toUpperCase()}</span>}
             <span className="nav-who">
               <b>{name}</b>
-              <em>{role}</em>
+              <span className="nav-tier">{role}</span>
             </span>
           </div>
           <form action="/api/auth/logout" method="post">

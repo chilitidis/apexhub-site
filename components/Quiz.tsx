@@ -25,7 +25,7 @@ interface Review { correct: number; chosen: number | null; why: string | null }
 interface Result { score: number; total: number; needed: number; passed: boolean; review: Review[] }
 
 export default function Quiz({
-  quizId, questions, needed, passed, attempts, nextTitle,
+  quizId, questions, needed, passed, attempts, nextTitle, final = false,
 }: {
   quizId: string;
   questions: PublicQuestion[];
@@ -33,7 +33,11 @@ export default function Quiz({
   passed: boolean;
   attempts: number;
   nextTitle?: string | null;
+  /** Τελικό τεστ επιπέδου: αλλάζει μόνο τα κείμενα, όχι τη λογική. */
+  final?: boolean;
 }) {
+  const heading = final ? 'Τελικό τεστ' : 'Τεστ μαθήματος';
+  const unlocks = final ? 'το επόμενο επίπεδο' : 'το επόμενο μάθημα';
   const [picks, setPicks] = useState<Array<number | null>>(() => questions.map(() => null));
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -87,7 +91,7 @@ export default function Quiz({
   if (passed && !res && !again) {
     return (
       <div className="sec quiz" id={`quiz-${quizId}`}>
-        <div className="sec-top"><h2>Τεστ μαθήματος</h2></div>
+        <div className="sec-top"><h2>{heading}</h2></div>
         <div className="quiz-done">
           <span className="quiz-ic"><ICheck /></span>
           <div>
@@ -117,10 +121,10 @@ export default function Quiz({
       <div className="endcard" id={`quiz-${quizId}`}>
         <div className="endcard-grid" aria-hidden="true" />
         <div className="endcard-in">
-          <span className="endcard-kick">Τέλος μαθήματος</span>
+          <span className="endcard-kick">{final ? 'Τελος επιπεδου' : 'Τελος μαθηματος'}</span>
           <h2>Επόμενο βήμα: Άσκηση</h2>
           <p>
-            {needed} σωστές από {total}. Χωρίς αυτό δεν ξεκλειδώνει το επόμενο μάθημα
+            {needed} σωστές από {total}. Χωρίς αυτό δεν ξεκλειδώνει {unlocks}
             {nextTitle ? <>, «{nextTitle}»</> : null}.
           </p>
           <button type="button" className="endcard-go" onClick={() => { setOpen(true); jump(); }}>
@@ -138,9 +142,9 @@ export default function Quiz({
 
   return (
     <div className="sec quiz" id={`quiz-${quizId}`}>
-      <div className="sec-top"><h2>Τεστ μαθήματος</h2></div>
+      <div className="sec-top"><h2>{heading}</h2></div>
       <p className="sub">
-        {needed} σωστές από {total} για να ανοίξει το επόμενο μάθημα
+        {needed} σωστές από {total} για να ανοίξει {unlocks}
         {nextTitle ? <> — <b>{nextTitle}</b></> : null}.
         {attempts > 0 && !res ? ` Προσπάθειες μέχρι τώρα: ${attempts}.` : ''}
       </p>
@@ -199,7 +203,8 @@ export default function Quiz({
             <b>{res.score} / {res.total} — {res.passed ? 'πέρασες' : 'δεν πέρασες'}</b>
             <p>
               {res.passed
-                ? (nextTitle ? `Το επόμενο μάθημα άνοιξε: ${nextTitle}.` : 'Το επόμενο μάθημα άνοιξε.')
+                ? (nextTitle ? `Το επόμενο μάθημα άνοιξε: ${nextTitle}.`
+                             : final ? 'Το επόμενο επίπεδο άνοιξε.' : 'Το επόμενο μάθημα άνοιξε.')
                 : `Χρειάζονται ${res.needed} σωστές. Διάβασε τις εξηγήσεις και ξαναδοκίμασε — δεν υπάρχει όριο προσπαθειών.`}
             </p>
           </div>
