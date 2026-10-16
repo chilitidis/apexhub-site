@@ -2,6 +2,10 @@
    fills as you climb. Graphite throughout; gold is the accent of achievement,
    borrowed from the members' platform, and it appears only where something
    is earned. */
+/* Layout: an ascent. A hairline rail on the left marks the three pillars and
+   fills as you climb. Graphite throughout; gold is the accent of achievement,
+   borrowed from the members' platform, and it appears only where something
+   is earned. */
 :root{
   color-scheme: dark;
 
@@ -21,6 +25,10 @@
   --goldlo: #F3DC9A;
 
   --disp: 'Commissioner', -apple-system, system-ui, 'Helvetica Neue', Arial, sans-serif;
+  /* Η serif των τίτλων — η ΜΟΝΗ προσθήκη αυτού του περάσματος. Ίδια
+     οικογένεια με την πλατφόρμα μελών, ώστε οι δύο σελίδες να μιλούν με
+     την ίδια φωνή. Φορτώνεται από το root layout με subset `greek`. */
+  --serif: var(--font-serif), 'Noto Serif Display', Georgia, 'Times New Roman', serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --gut: clamp(24px, 4vw, 72px);
@@ -41,7 +49,12 @@ body{
 
 .wrap{ max-width:var(--max); margin-inline:auto; padding-inline:var(--gut); position:relative; z-index:1 }
 
-h1,h2,h3,h4{ margin:0; font-weight:500; letter-spacing:-.025em; text-wrap:balance }
+/* ΟΙ ΤΙΤΛΟΙ ΣΕ SERIF. Μόνη αλλαγή της τυπογραφίας: η οικογένεια και τα
+   βάρη. Τα μεγέθη, τα κενά και η διάταξη μένουν ακριβώς όπως ήταν.
+   Το βάρος πέφτει από 500 σε 400 επειδή η serif σε μεγάλα μεγέθη
+   διαβάζεται βαρύτερη από μια sans στο ίδιο νούμερο. */
+h1,h2,h3,h4{ margin:0; font-family:var(--serif); font-weight:400;
+             letter-spacing:-.025em; text-wrap:balance }
 p{ margin:0 }
 
 .lbl{ font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.2em;
@@ -148,14 +161,20 @@ a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radiu
 .kicker .dot{ width:3px; height:3px; border-radius:50%; background:var(--goldd); flex:none }
 @media (max-width:620px){ .kicker{ font-size:9px; gap:7px } }
 
-/* Το οπτικό αριστερό περίγραμμα ενός «Χ» σε βάρος 200 κάθεται λίγο μέσα
-   από το γεωμετρικό. Το -.03em το φέρνει στη γραμμή του λογοτύπου. */
-.hero h1{ font-size:clamp(48px,7vw,106px); line-height:.94; letter-spacing:-.05em;
-          font-weight:200; margin-top:clamp(20px,3vw,34px); max-width:11ch;
+/* Ο ΤΙΤΛΟΣ ΣΕ SERIF. Η εναλλαγή λεπτού και έντονου που είχε η σελίδα
+   μένει — αλλά γίνεται τώρα μέσα στην ίδια οικογένεια, με αλλαγή βάρους
+   (400 → 600) αντί για αλλαγή γραμματοσειράς. Το μέγεθος, η θέση και το
+   gradient του «αξία.» είναι ακριβώς όπως ήταν.
+
+   Το line-height ανεβαίνει από .94 σε 1.0 και το letter-spacing χαλαρώνει:
+   η serif έχει ψηλότερα ascenders από την Commissioner, και στο .94 οι
+   τόνοι των κεφαλαίων θα ακουμπούσαν τη γραμμή από πάνω. */
+.hero h1{ font-size:clamp(48px,7vw,106px); line-height:1.0; letter-spacing:-.04em;
+          font-weight:400; margin-top:clamp(20px,3vw,34px); max-width:11ch;
           margin-left:-.03em }
-.hero h1 b{ font-weight:800 }
+.hero h1 b{ font-weight:600 }
 .hero h1 em{
-  font-style:normal; font-weight:800;
+  font-style:normal; font-weight:600;
   background:linear-gradient(160deg,var(--goldlo),var(--gold) 45%,#B8912F);
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
@@ -234,8 +253,8 @@ section.risk{ background:rgb(9 9 10 / 92%) }
 /* ── section frame ────────────────────────────────────────────────────── */
 section{ border-top:1px solid var(--rule); padding-block:clamp(72px,9.5vw,124px) }
 .head{ display:grid; grid-template-columns:230px 1fr; gap:46px; align-items:start }
-.head h2{ font-size:clamp(33px,4.4vw,56px); line-height:1.06; max-width:19ch; font-weight:400;
-          letter-spacing:-.032em }
+.head h2{ font-size:clamp(33px,4.4vw,56px); line-height:1.1; max-width:19ch; font-weight:400;
+          letter-spacing:-.028em }
 .head .sub{ margin-top:20px; color:var(--fg2); max-width:60ch }
 
 /* Ο αριθμός της ενότητας σε τεράστιο ultra-thin περίγραμμα: δίνει στην
@@ -295,7 +314,7 @@ section{ border-top:1px solid var(--rule); padding-block:clamp(72px,9.5vw,124px)
 .pillar::after{ content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
   background:linear-gradient(var(--gold),transparent 82%); opacity:.75 }
 .pillar .no{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; color:var(--goldd); padding-top:7px }
-.pillar h3{ font-size:clamp(21px,2.7vw,28px); font-weight:500; line-height:1.14 }
+.pillar h3{ font-size:clamp(21px,2.7vw,28px); font-weight:400; line-height:1.18 }
 .pillar .kick{ margin-top:12px; color:var(--fg2); font-size:15.5px }
 .pillar ul{ list-style:none; margin:0; padding:0; display:grid; gap:14px }
 .pillar li{ display:grid; grid-template-columns:auto 1fr; gap:13px; align-items:start }
