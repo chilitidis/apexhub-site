@@ -178,7 +178,7 @@ export default function Chrome() {
         <div className="stops">
           <a href="#p1">Trading</a>
           <a href="#p2">Κοινότητα</a>
-          <a href="#p3">Εκπαίδευση</a>
+          <a href="#p3">Affiliate</a>
         </div>
       </div>
     </>
