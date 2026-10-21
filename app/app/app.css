@@ -568,6 +568,17 @@ a.card2.course:hover b.h2{ color:var(--gold) }
 .pager2 b{ display:block; margin-top:5px; font-size:14px; font-weight:500 }
 .pager2 a:hover b{ color:var(--gold) }
 
+/* Η λίστα στο πλάι: όλη η διαδρομή, χωρισμένη σε ενότητες. Ο τίτλος της
+   ενότητας είναι ήσυχος — ο χάρτης πρέπει να διαβάζεται με μια ματιά, όχι
+   να ανταγωνίζεται το μάθημα που βλέπεις. */
+.sideblock + .sideblock{ margin-top:22px; padding-top:18px; border-top:1px solid var(--rule) }
+.sideblock-t{ margin:0 0 8px; padding-inline:10px; font-family:var(--disp);
+  font-size:10.5px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--gold) }
+.lesson2-side .sec-top{ margin-bottom:16px }
+.lesson2-side .sec-top h2{ font-family:var(--serif); font-size:16px; font-weight:400;
+  letter-spacing:-.005em; text-transform:none; color:var(--fg) }
+
 .sidelist{ list-style:none; margin:0; padding:0 }
 .sidelist a{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
   text-decoration:none; color:var(--fg2); font-size:13.5px;

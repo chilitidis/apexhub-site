@@ -19,7 +19,10 @@ export default async function LessonPage({
   const d = await lessonBySlug(v, params.course, params.lesson);
   if (!d) notFound();
 
-  const { course, lesson, files, prev, next, siblings } = d;
+  const { course, lesson, files, prev, next, outline } = d;
+  /* Οι τίτλοι των ενοτήτων μπαίνουν μόνο όταν υπάρχουν πολλές. Σε μάθημα με
+     μία ενότητα, μια επικεφαλίδα πάνω από όλη τη λίστα δεν χωρίζει τίποτα. */
+  const manyModules = outline.length > 1;
 
   /* Το τεστ φορτώνεται μόνο για μάθημα που ο χρήστης δικαιούται να δει. Σε
      κλειδωμένο μάθημα δεν έχει νόημα — και δεν θα έπρεπε να φαίνεται καν ότι
@@ -127,20 +130,31 @@ export default async function LessonPage({
       </div>
 
       <aside className="lesson2-side">
-        <div className="sec-top"><h2>Στην ενότητα</h2></div>
-        <ol className="sidelist">
-          {siblings.map((l) => (
-            <li key={l.id}>
-              <Link href={`/app/academy/${course.slug}/${l.slug}`}
-                    className={`${l.slug === lesson.slug ? 'here' : ''} ${l.locked || l.gated ? 'locked' : ''}`}>
-                <span className="lk-ic">
-                  {l.locked || l.gated ? <ILock /> : l.quizPassed || l.done ? <ICheck /> : <IPlay />}
-                </span>
-                <span>{l.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ol>
+        <div className="sec-top">
+          <h2>{course.title}</h2>
+          <span className="meta num">
+            {outline.reduce((a, m) => a + m.items.filter((x) => x.done).length, 0)}
+            /{outline.reduce((a, m) => a + m.items.length, 0)}
+          </span>
+        </div>
+        {outline.map((m) => (
+          <div className="sideblock" key={m.id}>
+            {manyModules && <h3 className="sideblock-t">{m.title}</h3>}
+            <ol className="sidelist">
+              {m.items.map((l) => (
+                <li key={l.id}>
+                  <Link href={`/app/academy/${course.slug}/${l.slug}`}
+                        className={`${l.slug === lesson.slug ? 'here' : ''} ${l.locked || l.gated ? 'locked' : ''}`}>
+                    <span className="lk-ic">
+                      {l.locked || l.gated ? <ILock /> : l.quizPassed || l.done ? <ICheck /> : <IPlay />}
+                    </span>
+                    <span>{l.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </aside>
     </div>
   );
