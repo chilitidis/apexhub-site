@@ -158,7 +158,10 @@ export default async function Catalogue({
 
                 {tracks.length > 0 && (
                   <div className="tracks">
-                    <div className="sec-top sub-top"><h2>Tracks</h2></div>
+                    {/* Δεν κλειδώνουν τίποτα και δεν τα κλειδώνει τίποτα:
+                        διαβάζονται όποτε θέλει κανείς, παράλληλα με τη
+                        διαδρομή. Γι' αυτό κάθονται χωριστά, από κάτω. */}
+                    <div className="sec-top sub-top"><h2>Η νοοτροπια</h2></div>
                     <div className="grid g3">{tracks.map(card)}</div>
                   </div>
                 )}
