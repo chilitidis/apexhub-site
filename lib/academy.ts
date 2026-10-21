@@ -1,6 +1,6 @@
 import 'server-only';
 import { db } from './db';
-import { lessonsWithQuiz, passedLessons } from './quiz';
+import { lessonsWithQuiz, passedLessons, passedFinalLevels } from './quiz';
 
 /**
  * =============================================================================
@@ -28,6 +28,46 @@ export type Level = 'beginner' | 'intermediate' | 'advanced';
 export const LEVEL_EL: Record<Level, string> = {
   beginner: 'Αρχάριος', intermediate: 'Μεσαίος', advanced: 'Προχωρημένος',
 };
+
+/** Η σειρά των επιπέδων. Από αυτήν βγαίνει ποιο ξεκλειδώνει ποιο. */
+export const LEVEL_ORDER: Level[] = ['beginner', 'intermediate', 'advanced'];
+
+/**
+ * =============================================================================
+ * ΠΟΙΑ ΕΠΙΠΕΔΑ ΕΧΕΙ ΑΝΟΙΧΤΑ ΤΟ ΜΕΛΟΣ
+ * =============================================================================
+ *
+ * Ο ΚΑΝΟΝΑΣ: το πρώτο επίπεδο είναι πάντα ανοιχτό. Κάθε επόμενο ανοίγει μόνο
+ * όταν έχει περαστεί το ΤΕΛΙΚΟ τεστ του προηγούμενου.
+ *
+ * Η ΣΑΡΩΣΗ ΣΤΑΜΑΤΑ ΣΤΟ ΠΡΩΤΟ ΚΛΕΙΔΩΜΑ, δεν συνεχίζει. Αν κάποιος περνούσε
+ * το τελικό του «Μεσαίου» χωρίς να έχει περάσει του «Αρχάριου» — πράγμα που
+ * θα γινόταν αν άνοιγε η σελίδα με απευθείας διεύθυνση — δεν πρέπει να
+ * ξεκλειδώνει ο «Προχωρημένος» πηδώντας ένα επίπεδο.
+ *
+ * ΕΠΙΠΕΔΟ ΧΩΡΙΣ ΤΕΛΙΚΟ ΤΕΣΤ ΜΠΛΟΚΑΡΕΙ ΟΣΑ ΕΡΧΟΝΤΑΙ ΜΕΤΑ, και σωστά: δεν
+ * υπάρχει τρόπος να το περάσεις, άρα δεν υπάρχει τρόπος να το προσπεράσεις.
+ * Σήμερα αυτό αφορά τον «Μεσαίο», που δεν έχει ακόμη τελικό τεστ.
+ *
+ * Ο ΔΙΑΧΕΙΡΙΣΤΗΣ ΤΑ ΒΛΕΠΕΙ ΟΛΑ: πρέπει να μπορεί να ελέγξει το υλικό χωρίς
+ * να περάσει τριάντα ερωτήσεις.
+ */
+export async function unlockedLevels(v: Viewer): Promise<Set<Level>> {
+  if (v.admin) return new Set(LEVEL_ORDER);
+  const passed = await passedFinalLevels(v.tid);
+  const out = new Set<Level>();
+  for (const lv of LEVEL_ORDER) {
+    out.add(lv);
+    if (!passed.has(lv)) break;
+  }
+  return out;
+}
+
+/** Ποιο επίπεδο πρέπει να κλείσει κανείς για να ανοίξει το `lv`. */
+export function unlockedBy(lv: Level): Level | null {
+  const i = LEVEL_ORDER.indexOf(lv);
+  return i > 0 ? LEVEL_ORDER[i - 1] : null;
+}
 
 export interface Course {
   id: string; slug: string; title: string; subtitle: string | null;
@@ -111,6 +151,8 @@ export interface LessonView extends Omit<Lesson, 'vimeo_id' | 'body'> {
 
 export interface CourseView extends Course {
   lessons: number; done: number; locked: boolean; minutes: number;
+  /** Κλειδωμένο επειδή δεν έχει ανοίξει το επίπεδο, όχι το πακέτο. */
+  levelLocked: boolean;
 }
 
 /**
@@ -160,10 +202,11 @@ export async function catalogue(v: Viewer): Promise<CourseView[]> {
   const ids = (courses ?? []).map((c) => (c as Course).id);
   if (!ids.length) return [];
 
-  const [{ data: lessons }, { data: prog }, am] = await Promise.all([
+  const [{ data: lessons }, { data: prog }, am, open] = await Promise.all([
     s.from('lessons').select('id, course_id, module_id, is_free, duration_sec, status').in('course_id', ids),
     s.from('lesson_progress').select('lesson_id, completed_at').eq('telegram_id', v.tid),
     accessMap(),
+    unlockedLevels(v),
   ]);
 
   const doneSet = new Set(
@@ -175,12 +218,14 @@ export async function catalogue(v: Viewer): Promise<CourseView[]> {
     const c = raw as unknown as Course;
     const ls = ((lessons ?? []) as Array<{ id: string; course_id: string; module_id: string; is_free: boolean; duration_sec: number | null; status: string }>)
       .filter((l) => l.course_id === c.id && (v.admin || l.status === 'published'));
+    const levelLocked = !open.has(c.level);
     return {
       ...c,
       lessons: ls.length,
       done: ls.filter((l) => doneSet.has(l.id)).length,
       minutes: Math.round(ls.reduce((a, l) => a + (l.duration_sec ?? 0), 0) / 60),
-      locked: !allowed(v, am.get(`course:${c.id}`)),
+      locked: levelLocked || !allowed(v, am.get(`course:${c.id}`)),
+      levelLocked,
     };
   });
 }
@@ -194,11 +239,12 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
   const course = c as unknown as Course;
   if (course.status !== 'published' && !v.admin) return null;
 
-  const [{ data: mods }, { data: les }, { data: prog }, am] = await Promise.all([
+  const [{ data: mods }, { data: les }, { data: prog }, am, open] = await Promise.all([
     s.from('modules').select('*').eq('course_id', course.id).order('sort'),
     s.from('lessons').select('*').eq('course_id', course.id).order('sort'),
     s.from('lesson_progress').select('lesson_id, completed_at').eq('telegram_id', v.tid),
     accessMap(),
+    unlockedLevels(v),
   ]);
 
   const doneSet = new Set(
@@ -206,7 +252,12 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
       .filter((p) => p.completed_at).map((p) => p.lesson_id),
   );
 
-  const courseLocked = !allowed(v, am.get(`course:${course.id}`));
+  /* Το κλείδωμα επιπέδου μπαίνει ΕΔΩ, μαζί με το κλείδωμα πακέτου, γιατί από
+     εδώ περνάει και η σελίδα του μαθήματος: ό,τι είναι `locked` δεν παίρνει
+     ποτέ vimeo_id (βλ. `lessonBySlug`). Αν το κλείδωμα ζούσε μόνο στον
+     κατάλογο, θα αρκούσε η απευθείας διεύθυνση για να το προσπεράσει κανείς. */
+  const levelLocked = !open.has(course.level);
+  const courseLocked = levelLocked || !allowed(v, am.get(`course:${course.id}`));
 
   const modules = ((mods ?? []) as unknown as Module[])
     .filter((m) => v.admin || m.status === 'published')
@@ -215,7 +266,11 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
       const items = ((les ?? []) as unknown as Lesson[])
         .filter((l) => l.module_id === m.id && (v.admin || l.status === 'published'))
         .map((l) => {
-          const locked = l.is_free ? false
+          /* Το `is_free` ανοίγει ένα μάθημα μέσα σε κλειδωμένο ΠΑΚΕΤΟ — είναι
+             το δείγμα. Δεν ανοίγει όμως κλειδωμένο ΕΠΙΠΕΔΟ: εκεί η σειρά της
+             ύλης είναι ο λόγος, και ένα δείγμα θα την έσπαγε. */
+          const locked = levelLocked ? true
+            : l.is_free ? false
             : modLocked || !allowed(v, am.get(`lesson:${l.id}`));
           const out: LessonView = {
             id: l.id, module_id: l.module_id, course_id: l.course_id, slug: l.slug,
@@ -286,6 +341,7 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
     total: all.length,
     done: all.filter((l) => l.done).length,
     locked: courseLocked,
+    levelLocked,
   };
 }
 

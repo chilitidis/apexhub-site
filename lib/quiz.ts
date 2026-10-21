@@ -146,6 +146,31 @@ export async function passedLessons(tid: number, lessonIds: string[]): Promise<S
   return new Set(quizzes.filter((q) => passedQuiz.has(q.id)).map((q) => q.lesson_id));
 }
 
+/**
+ * Ποιων ΕΠΙΠΕΔΩΝ το τελικό τεστ έχει περάσει ο χρήστης.
+ *
+ * ΔΥΟ ΕΡΩΤΗΜΑΤΑ ΑΝΤΙ ΓΙΑ ΕΝΑ ΜΕ JOIN, ΕΠΙΤΗΔΕΣ. Το PostgREST μπορεί να
+ * ενώσει τους δύο πίνακες σε μία κλήση, αλλά όταν δύο πίνακες συνδέονται με
+ * παραπάνω από ένα κλειδί η ένωση γίνεται διφορούμενη και η κλήση σκάει στην
+ * παραγωγή — μας έχει ήδη ρίξει το portal μία φορά. Δύο καθαρά ερωτήματα
+ * κοστίζουν ένα round-trip και δεν σπάνε ποτέ.
+ */
+export async function passedFinalLevels(tid: number): Promise<Set<string>> {
+  const s = db();
+  const { data: finals } = await s.from('quizzes')
+    .select('id, level').eq('kind', 'final').eq('status', 'published');
+  const rows = ((finals ?? []) as Array<{ id: string; level: string | null }>)
+    .filter((r): r is { id: string; level: string } => Boolean(r.level));
+  if (!rows.length) return new Set();
+
+  const { data: at } = await s.from('quiz_attempts')
+    .select('quiz_id').eq('telegram_id', tid).eq('passed', true)
+    .in('quiz_id', rows.map((r) => r.id));
+
+  const ok = new Set(((at ?? []) as Array<{ quiz_id: string }>).map((r) => r.quiz_id));
+  return new Set(rows.filter((r) => ok.has(r.id)).map((r) => r.level));
+}
+
 /** Ποια μαθήματα ΕΧΟΥΝ τεστ. Ένα μάθημα χωρίς τεστ δεν μπλοκάρει κανέναν. */
 export async function lessonsWithQuiz(lessonIds: string[]): Promise<Set<string>> {
   if (!lessonIds.length) return new Set();

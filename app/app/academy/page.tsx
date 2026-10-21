@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentSession } from '@/lib/session';
-import { viewerOf, catalogue, LEVEL_EL, type Level, type CourseView } from '@/lib/academy';
+import {
+  viewerOf, catalogue, unlockedLevels, unlockedBy, LEVEL_EL,
+  type Level, type CourseView,
+} from '@/lib/academy';
 import { finalQuiz } from '@/lib/quiz';
 import { ILock, ICheck } from '@/components/Icons';
 
@@ -26,9 +29,10 @@ export default async function Catalogue({
   const s = currentSession();
   if (!s) redirect('/login');
   const v = await viewerOf(s.tid);
-  const [all, beginnerFinal] = await Promise.all([
+  const [all, beginnerFinal, open] = await Promise.all([
     catalogue(v),
     finalQuiz(s.tid, 'beginner'),
+    unlockedLevels(v),
   ]);
 
   const q = (searchParams.q ?? '').trim().toLowerCase();
@@ -101,6 +105,9 @@ export default async function Catalogue({
         const path = hits.filter((c) => c.level === l && c.category !== 'track');
         const tracks = hits.filter((c) => c.level === l && c.category === 'track');
         const empty = path.length === 0 && tracks.length === 0;
+        /* Κλειδωμένο επίπεδο: υπάρχει υλικό, αλλά δεν έχει ανοίξει ακόμη. */
+        const locked = !open.has(l);
+        const prev = unlockedBy(l);
 
         /* Ένα κενό επίπεδο κατά την αναζήτηση δεν είναι «κλειδωμένο», είναι
            απλώς εκτός αποτελεσμάτων. Δεν δείχνουμε λουκέτο εκεί. */
@@ -112,12 +119,18 @@ export default async function Catalogue({
               <h2>Επιπεδο {i + 1} · {LEVEL_EL[l].toUpperCase()}</h2>
             </div>
 
-            {empty ? (
+            {empty || locked ? (
               <div className="locked-level">
                 <span className="locked-ic"><ILock /></span>
                 <div>
-                  <b className="h2">Δεν έχει ανοίξει ακόμη</b>
-                  <p>Ξεκλειδώνει με το Τελικό τεστ Αρχαρίων.</p>
+                  <b className="h2">
+                    {empty ? 'Δεν έχει ανοίξει ακόμη' : `${path.length + tracks.length === 1 ? 'Μία ενότητα' : `${path.length + tracks.length} ενότητες`} σε αναμονή`}
+                  </b>
+                  <p>
+                    {prev
+                      ? <>Ξεκλειδώνει με το Τελικό τεστ {LEVEL_EL[prev] === 'Αρχάριος' ? 'Αρχαρίων' : LEVEL_EL[prev]}.</>
+                      : 'Το περιεχόμενο ετοιμάζεται.'}
+                  </p>
                 </div>
               </div>
             ) : (
