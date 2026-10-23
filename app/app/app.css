@@ -375,6 +375,9 @@ a.quick:hover b{ color:var(--gold) }
 .sub-top{ margin-top:28px }
 .sub-top h2{ color:var(--fg2) }
 .tracks{ margin-top:4px }
+/* Τα tracks κάθονται τέρμα κάτω, έξω από τα επίπεδα. Μία πρόταση εξηγεί
+   γιατί δεν έχουν αριθμό επιπέδου, πριν τις δύο κάρτες. */
+.tracks-sub{ margin:-10px 0 20px; max-width:62ch }
 
 /* ── κλειδωμένο επίπεδο ──────────────────────────────────────────────── */
 .locked-level{ display:flex; align-items:center; gap:18px; border:1px dashed var(--rule2);

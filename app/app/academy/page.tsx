@@ -44,6 +44,12 @@ export default async function Catalogue({
   const shown = LEVELS.filter((l) => !level || level === l);
   const hits = all.filter(matches);
 
+  /* ΤΑ TRACKS ΔΕΝ ΑΝΗΚΟΥΝ ΣΕ ΕΠΙΠΕΔΟ. Η ψυχολογία και η νοοτροπία αφορούν
+     τον αρχάριο όσο και τον προχωρημένο, δεν κλειδώνουν τίποτα και δεν τα
+     κλειδώνει τίποτα. Γι' αυτό βγαίνουν ΜΙΑ φορά, τέρμα κάτω, και όχι μέσα
+     σε κάθε επίπεδο — αλλιώς το ίδιο υλικό θα φαινόταν τρεις φορές. */
+  const tracks = hits.filter((c) => c.category === 'track');
+
   const href = (l: string) => {
     const p = new URLSearchParams();
     if (q) p.set('q', q);
@@ -103,8 +109,7 @@ export default async function Catalogue({
 
       {shown.map((l, i) => {
         const path = hits.filter((c) => c.level === l && c.category !== 'track');
-        const tracks = hits.filter((c) => c.level === l && c.category === 'track');
-        const empty = path.length === 0 && tracks.length === 0;
+        const empty = path.length === 0;
         /* Κλειδωμένο επίπεδο: υπάρχει υλικό, αλλά δεν έχει ανοίξει ακόμη. */
         const locked = !open.has(l);
         const prev = unlockedBy(l);
@@ -124,7 +129,7 @@ export default async function Catalogue({
                 <span className="locked-ic"><ILock /></span>
                 <div>
                   <b className="h2">
-                    {empty ? 'Δεν έχει ανοίξει ακόμη' : `${path.length + tracks.length === 1 ? 'Μία ενότητα' : `${path.length + tracks.length} ενότητες`} σε αναμονή`}
+                    {empty ? 'Δεν έχει ανοίξει ακόμη' : `${path.length === 1 ? 'Μία ενότητα' : `${path.length} ενότητες`} σε αναμονή`}
                   </b>
                   <p>
                     {prev
@@ -156,20 +161,25 @@ export default async function Catalogue({
                   </Link>
                 )}
 
-                {tracks.length > 0 && (
-                  <div className="tracks">
-                    {/* Δεν κλειδώνουν τίποτα και δεν τα κλειδώνει τίποτα:
-                        διαβάζονται όποτε θέλει κανείς, παράλληλα με τη
-                        διαδρομή. Γι' αυτό κάθονται χωριστά, από κάτω. */}
-                    <div className="sec-top sub-top"><h2>Η νοοτροπια</h2></div>
-                    <div className="grid g3">{tracks.map(card)}</div>
-                  </div>
-                )}
               </>
             )}
           </section>
         );
       })}
+
+      {/* Η ΝΟΟΤΡΟΠΙΑ, ΜΙΑ ΦΟΡΑ, ΤΕΡΜΑ ΚΑΤΩ. Ανοιχτά από την πρώτη μέρα και σε
+          κάθε επίπεδο: δύο κάρτες, ψυχολογία και νοοτροπία. */}
+      {tracks.length > 0 && !level && (
+        <section className="sec level">
+          <div className="sec-top">
+            <h2>Το μυαλο του trader</h2>
+          </div>
+          <p className="sub tracks-sub">
+            Ανοιχτά από την πρώτη μέρα, σε όποιο επίπεδο κι αν βρίσκεσαι.
+          </p>
+          <div className="grid g3">{tracks.map(card)}</div>
+        </section>
+      )}
     </>
   );
 }
