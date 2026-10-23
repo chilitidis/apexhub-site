@@ -38,9 +38,11 @@ interface QuizQuestion {
 /** Ό,τι επιτρέπεται να δει ο browser πριν την υποβολή. */
 export interface PublicQuestion { q: string; o: string[]; l?: number }
 
+export type QuizKind = 'lesson' | 'final' | 'track' | 'overall';
+
 export interface QuizView {
   id: string;
-  kind: 'lesson' | 'final';
+  kind: QuizKind;
   title: string | null;
   intro: string | null;
   /** Πόσες σωστές χρειάζονται, σε απόλυτο αριθμό. Το ποσοστό μπερδεύει. */
@@ -64,9 +66,11 @@ export interface QuizResult {
 }
 
 type Row = {
-  id: string; kind: 'lesson' | 'final'; title: string | null; intro: string | null;
+  id: string; kind: QuizKind; title: string | null; intro: string | null;
   pass_pct: number; questions: QuizQuestion[]; status: string;
 };
+
+const COLS = 'id, kind, title, intro, pass_pct, questions, status';
 
 /**
  * Το κατώφλι σε απόλυτο αριθμό σωστών.
@@ -121,6 +125,79 @@ export async function finalQuiz(tid: number, level: string): Promise<QuizView | 
   const row = data as Row | null;
   if (!row || !row.questions?.length) return null;
   return view(row, await attemptsOf(tid, row.id));
+}
+
+/**
+ * Το τελικό τεστ ενός TRACK — της Ψυχολογίας ή της Νοοτροπίας.
+ *
+ * ΔΕΝ ΞΕΚΛΕΙΔΩΝΕΙ ΕΠΙΠΕΔΟ, και αυτό είναι σκόπιμο: τα δύο tracks διαβάζονται
+ * παράλληλα με τη διαδρομή, από την πρώτη μέρα. Το τεστ τους μετράει μόνο
+ * για το ολικό — και άρα για το πιστοποιητικό.
+ */
+export async function trackQuiz(tid: number, courseId: string): Promise<QuizView | null> {
+  const { data } = await db().from('quizzes').select(COLS)
+    .eq('course_id', courseId).eq('status', 'published').maybeSingle();
+  const row = data as Row | null;
+  if (!row || !row.questions?.length) return null;
+  return view(row, await attemptsOf(tid, row.id));
+}
+
+/** Το ολικό τεστ όλης της ακαδημίας. Ένα, μοναδικό. */
+export async function overallQuiz(tid: number): Promise<QuizView | null> {
+  const { data } = await db().from('quizzes').select(COLS)
+    .eq('kind', 'overall').eq('status', 'published').maybeSingle();
+  const row = data as Row | null;
+  if (!row || !row.questions?.length) return null;
+  return view(row, await attemptsOf(tid, row.id));
+}
+
+/** Ποιων track έχει περάσει το τελικό. Επιστρέφει course_id. */
+export async function passedTracks(tid: number): Promise<Set<string>> {
+  const s = db();
+  const { data: qs } = await s.from('quizzes')
+    .select('id, course_id').eq('kind', 'track').eq('status', 'published');
+  const rows = ((qs ?? []) as Array<{ id: string; course_id: string | null }>)
+    .filter((r): r is { id: string; course_id: string } => Boolean(r.course_id));
+  if (!rows.length) return new Set();
+
+  const { data: at } = await s.from('quiz_attempts')
+    .select('quiz_id').eq('telegram_id', tid).eq('passed', true)
+    .in('quiz_id', rows.map((r) => r.id));
+
+  const ok = new Set(((at ?? []) as Array<{ quiz_id: string }>).map((r) => r.quiz_id));
+  return new Set(rows.filter((r) => ok.has(r.id)).map((r) => r.course_id));
+}
+
+/**
+ * Η περασμένη προσπάθεια στο ολικό τεστ — το πιστοποιητικό στηρίζεται ΜΟΝΟ
+ * σε αυτή. Επιστρέφει την ΚΑΛΥΤΕΡΗ περασμένη, όχι την τελευταία: αν κάποιος
+ * ξαναδώσει το τεστ από περιέργεια και πάει χειρότερα, δεν του χαλάμε το
+ * ποσοστό που ήδη κέρδισε.
+ *
+ * Το `null` σημαίνει «δεν το έχει περάσει» — και η σελίδα του πιστοποιητικού
+ * δεν δείχνει τίποτα. Δεν υπάρχει άλλος δρόμος προς το πιστοποιητικό.
+ */
+export async function certificate(tid: number): Promise<{
+  score: number; total: number; pct: number; at: string;
+} | null> {
+  const s = db();
+  const { data: q } = await s.from('quizzes').select('id')
+    .eq('kind', 'overall').eq('status', 'published').maybeSingle();
+  const quiz = q as { id: string } | null;
+  if (!quiz) return null;
+
+  const { data } = await s.from('quiz_attempts')
+    .select('score, total, created_at').eq('telegram_id', tid)
+    .eq('quiz_id', quiz.id).eq('passed', true);
+  const rows = (data ?? []) as Array<{ score: number; total: number; created_at: string }>;
+  if (!rows.length) return null;
+
+  const best = rows.reduce((b, r) => (b.score >= r.score ? b : r));
+  return {
+    score: best.score, total: best.total,
+    pct: Math.round((best.score / best.total) * 100),
+    at: best.created_at,
+  };
 }
 
 /**

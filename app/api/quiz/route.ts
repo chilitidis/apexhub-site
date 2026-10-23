@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentSession } from '@/lib/session';
-import { viewerOf, lessonBySlug } from '@/lib/academy';
-import { gradeQuiz } from '@/lib/quiz';
+import {
+  viewerOf, lessonBySlug, catalogue, unlockedLevels, LEVEL_ORDER,
+} from '@/lib/academy';
+import { gradeQuiz, passedFinalLevels, passedTracks } from '@/lib/quiz';
 import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -33,8 +35,10 @@ export async function POST(req: NextRequest) {
   const answers = (body.answers as unknown[]).map((x) => (typeof x === 'number' ? x : null));
 
   const { data: q } = await db().from('quizzes')
-    .select('kind, lesson_id, level').eq('id', body.quizId).maybeSingle();
-  const quiz = q as { kind: string; lesson_id: string | null; level: string | null } | null;
+    .select('kind, lesson_id, level, course_id').eq('id', body.quizId).maybeSingle();
+  const quiz = q as {
+    kind: string; lesson_id: string | null; level: string | null; course_id: string | null;
+  } | null;
   if (!quiz) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
   const v = await viewerOf(s.tid);
@@ -49,6 +53,48 @@ export async function POST(req: NextRequest) {
     const view = await lessonBySlug(v, c.slug, row.slug);
     if (!view || view.lesson.locked || view.lesson.gated) {
       return NextResponse.json({ error: 'locked' }, { status: 403 });
+    }
+  }
+
+  /* ΤΑ ΤΕΛΙΚΑ ΚΑΙ ΤΟ ΟΛΙΚΟ ΕΧΟΥΝ ΤΟΝ ΔΙΚΟ ΤΟΥΣ ΕΛΕΓΧΟ, ΚΑΙ ΤΟΝ ΧΡΕΙΑΖΟΝΤΑΙ
+     ΠΕΡΙΣΣΟΤΕΡΟ. Το τεστ ενός μαθήματος ξεκλειδώνει ένα βίντεο· το τελικό
+     ξεκλειδώνει ολόκληρο επίπεδο και το ολικό δίνει πιστοποιητικό. Όποιος
+     στείλει POST κατευθείαν εδώ, χωρίς αυτό το μπλοκ, θα μπορούσε να πάρει
+     το χαρτί χωρίς να ανοίξει ποτέ ένα μάθημα. Ο διαχειριστής εξαιρείται:
+     πρέπει να μπορεί να δοκιμάσει τα τεστ. */
+  if (!v.admin && quiz.kind !== 'lesson') {
+    const courses = await catalogue(v);
+    const left = (pred: (c: (typeof courses)[number]) => boolean) =>
+      courses.filter(pred).reduce((a, c) => a + (c.lessons - c.done), 0);
+
+    if (quiz.kind === 'final' && quiz.level) {
+      const open = await unlockedLevels(v);
+      const ok = open.has(quiz.level as (typeof LEVEL_ORDER)[number])
+        && left((c) => c.level === quiz.level && c.category !== 'track') === 0;
+      if (!ok) return NextResponse.json({ error: 'locked' }, { status: 403 });
+    }
+
+    if (quiz.kind === 'track' && quiz.course_id) {
+      if (left((c) => c.id === quiz.course_id) > 0) {
+        return NextResponse.json({ error: 'locked' }, { status: 403 });
+      }
+    }
+
+    if (quiz.kind === 'overall') {
+      /* Τα tracks που ΕΧΟΥΝ τεστ, όχι όλα τα tracks: ένα track χωρίς τελικό
+         τεστ δεν μπορεί να περαστεί, και θα κλείδωνε το ολικό για πάντα. */
+      const [lv, tr, { data: tq }] = await Promise.all([
+        passedFinalLevels(s.tid),
+        passedTracks(s.tid),
+        db().from('quizzes').select('course_id').eq('kind', 'track').eq('status', 'published'),
+      ]);
+      const need = ((tq ?? []) as Array<{ course_id: string | null }>)
+        .map((r) => r.course_id).filter((x): x is string => Boolean(x));
+      const levelsOk = LEVEL_ORDER.every((l) => lv.has(l));
+      const tracksOk = need.every((id) => tr.has(id));
+      if (!levelsOk || !tracksOk) {
+        return NextResponse.json({ error: 'locked' }, { status: 403 });
+      }
     }
   }
 

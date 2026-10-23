@@ -5,7 +5,7 @@ import {
   viewerOf, catalogue, unlockedLevels, unlockedBy, LEVEL_EL,
   type Level, type CourseView,
 } from '@/lib/academy';
-import { finalQuiz } from '@/lib/quiz';
+import { finalQuiz, trackQuiz, overallQuiz, type QuizView } from '@/lib/quiz';
 import { ILock, ICheck } from '@/components/Icons';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +55,14 @@ export default async function Catalogue({
      σε κάθε επίπεδο — αλλιώς το ίδιο υλικό θα φαινόταν τρεις φορές. */
   const tracks = hits.filter((c) => c.category === 'track');
 
+  /* Το τελικό τεστ κάθε track, και το ολικό που κλείνει τα πάντα. Το δεύτερο
+     ερώτημα γίνεται εδώ και όχι πιο πάνω επειδή χρειάζεται τα ίδια τα tracks:
+     το τεστ του track δένεται στο μάθημα, όχι σε επίπεδο. */
+  const [trackFinals, overall] = await Promise.all([
+    Promise.all(tracks.map((c) => trackQuiz(s.tid, c.id))),
+    overallQuiz(s.tid),
+  ]);
+
   const href = (l: string) => {
     const p = new URLSearchParams();
     if (q) p.set('q', q);
@@ -62,6 +70,21 @@ export default async function Catalogue({
     const qs = p.toString();
     return qs ? `/app/academy?${qs}` : '/app/academy';
   };
+
+  /* Η κάρτα ενός τεστ που κλείνει κάτι: επίπεδο, track ή όλη την ακαδημία.
+     Μία συνάρτηση για τα τρία, γιατί είναι η ίδια κάρτα — αλλάζει μόνο το
+     τι υπόσχεται όταν περαστεί. */
+  const testCard = (to: string, fin: QuizView, eyebrow: string, done: string, todo: string) => (
+    <Link key={to} href={to} className="finalcard">
+      <span className="finalcard-ic">{fin.passed ? <ICheck /> : <ILock />}</span>
+      <span className="finalcard-txt">
+        <span className="eyebrow sm">{eyebrow}</span>
+        <b className="h2">{fin.title ?? 'Τελικό τεστ'}</b>
+        <em>{fin.passed ? done : `${fin.needed} σωστές από ${fin.total} ${todo}`}</em>
+      </span>
+      <span className="meta">{fin.passed ? 'Ολοκληρώθηκε' : 'Δώσ’ το →'}</span>
+    </Link>
+  );
 
   const card = (c: CourseView) => (
     <Link key={c.id} href={`/app/academy/${c.slug}`}
@@ -153,24 +176,12 @@ export default async function Catalogue({
                   const fin = finalOf.get(l);
                   if (!fin || q) return null;
                   const last = i === LEVELS.length - 1;
-                  return (
-                    <Link href={`/app/academy/final/${l}`} className="finalcard">
-                      <span className="finalcard-ic">
-                        {fin.passed ? <ICheck /> : <ILock />}
-                      </span>
-                      <span className="finalcard-txt">
-                        <span className="eyebrow sm">Κλεινει το επιπεδο</span>
-                        <b className="h2">{fin.title ?? 'Τελικό τεστ'}</b>
-                        <em>
-                          {fin.passed
-                            ? last
-                              ? 'Το έχεις περάσει. Έκλεισες όλη την ύλη.'
-                              : 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.'
-                            : `${fin.needed} σωστές από ${fin.total}${last ? ' για να κλείσει η ύλη.' : ' για να ανοίξει το επόμενο επίπεδο.'}`}
-                        </em>
-                      </span>
-                      <span className="meta">{fin.passed ? 'Ολοκληρώθηκε' : 'Δώσ’ το →'}</span>
-                    </Link>
+                  return testCard(
+                    `/app/academy/final/${l}`, fin, 'Κλεινει το επιπεδο',
+                    last
+                      ? 'Το έχεις περάσει. Έκλεισες τη διαδρομή των επιπέδων.'
+                      : 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.',
+                    last ? 'για να κλείσει η διαδρομή.' : 'για να ανοίξει το επόμενο επίπεδο.',
                   );
                 })()}
 
@@ -191,6 +202,43 @@ export default async function Catalogue({
             Ανοιχτά από την πρώτη μέρα, σε όποιο επίπεδο κι αν βρίσκεσαι.
           </p>
           <div className="grid g3">{tracks.map(card)}</div>
+
+          {/* Ένα τελικό τεστ ανά track. Δεν ξεκλειδώνουν επίπεδο — μετράνε
+              για το ολικό, και μόνο γι' αυτό. */}
+          {!q && tracks.map((c, n) => {
+            const fin = trackFinals[n];
+            return fin ? testCard(
+              `/app/academy/final/${c.slug}`, fin, 'Κλεινει την ενοτητα',
+              'Το έχεις περάσει. Μετράει για το ολικό τεστ.',
+              'για να μετρήσει στο ολικό τεστ.',
+            ) : null;
+          })}
+        </section>
+      )}
+
+      {/* ΤΟ ΟΛΙΚΟ ΤΕΣΤ, ΤΕΛΕΥΤΑΙΟ ΣΤΗ ΣΕΛΙΔΑ ΟΠΩΣ ΚΑΙ ΣΤΗ ΔΙΑΔΡΟΜΗ.
+          Ανοίγει μόνο με τα πέντε τελικά περασμένα, και δίνει το χαρτί. */}
+      {overall && !q && !level && (
+        <section className="sec level">
+          <div className="sec-top">
+            <h2>Το τελος της διαδρομης</h2>
+          </div>
+          {testCard(
+            '/app/academy/final/overall', overall, 'Ολη η ακαδημια',
+            'Το πέρασες. Το πιστοποιητικό σου είναι έτοιμο.',
+            'για το πιστοποιητικό ολοκλήρωσης.',
+          )}
+          {overall.passed && (
+            <Link href="/app/academy/certificate" className="finalcard">
+              <span className="finalcard-ic"><ICheck /></span>
+              <span className="finalcard-txt">
+                <span className="eyebrow sm">Πιστοποιητικο</span>
+                <b className="h2">Το πιστοποιητικό σου</b>
+                <em>Με το όνομά σου, την ημερομηνία και το ποσοστό σου.</em>
+              </span>
+              <span className="meta">Δες το →</span>
+            </Link>
+          )}
         </section>
       )}
     </>

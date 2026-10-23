@@ -19,6 +19,16 @@ const NAMES: Record<string, string> = {
   backoffice: 'Back office',
   admin: 'Διαχείριση',
   settings: 'Ρυθμίσεις',
+  /* Οι σελίδες των τεστ δεν είναι μαθήματα: το slug τους δεν υπάρχει στη
+     βάση, οπότε χωρίς αυτά η μπάρα θα έγραφε «Final / Beginner». */
+  final: 'Τελικό τεστ',
+  certificate: 'Πιστοποιητικό',
+  overall: 'Ολικό τεστ',
+  beginner: 'Αρχάριος',
+  intermediate: 'Μεσαίος',
+  advanced: 'Προχωρημένος',
+  mindset: 'Νοοτροπία',
+  psychology: 'Ψυχολογία',
 };
 
 const pretty = (seg: string) =>
@@ -43,7 +53,8 @@ export default function Crumbs() {
 
   useEffect(() => {
     const seg = path.split('/').filter(Boolean);
-    if (seg[1] !== 'academy' || !seg[2]) {
+    /* Το `final` και το `certificate` δεν είναι μαθήματα — μην τα ρωτάς. */
+    if (seg[1] !== 'academy' || !seg[2] || seg[2] === 'final' || seg[2] === 'certificate') {
       /* Μόνο αν ΟΝΤΩΣ υπάρχει κάτι να καθαρίσει. Ένα setTitles({}) χωρίς
          έλεγχο είναι νέο αντικείμενο κάθε φορά, δηλαδή νέο render. */
       setTitles((t) => (Object.keys(t).length ? {} : t));
