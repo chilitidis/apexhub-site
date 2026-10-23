@@ -29,11 +29,16 @@ export default async function Catalogue({
   const s = currentSession();
   if (!s) redirect('/login');
   const v = await viewerOf(s.tid);
-  const [all, beginnerFinal, open] = await Promise.all([
+  /* ΤΟ ΤΕΛΙΚΟ ΤΕΣΤ ΚΑΘΕ ΕΠΙΠΕΔΟΥ, ΟΧΙ ΜΟΝΟ ΤΟΥ ΑΡΧΑΡΙΟΥ. Όσο υπήρχε ένα
+     μόνο τεστ, η σελίδα το ζητούσε με το όνομά του. Με τρία επίπεδα αυτό θα
+     έδειχνε διαδρομές που τελειώνουν πουθενά: ο Μεσαίος θα τελείωνε χωρίς
+     πόρτα προς τον Προχωρημένο. */
+  const [all, finals, open] = await Promise.all([
     catalogue(v),
-    finalQuiz(s.tid, 'beginner'),
+    Promise.all(LEVELS.map((l) => finalQuiz(s.tid, l))),
     unlockedLevels(v),
   ]);
+  const finalOf = new Map(LEVELS.map((l, i) => [l, finals[i]]));
 
   const q = (searchParams.q ?? '').trim().toLowerCase();
   const level = searchParams.level ?? '';
@@ -142,24 +147,32 @@ export default async function Catalogue({
               <>
                 {path.length > 0 && <div className="grid g3">{path.map(card)}</div>}
 
-                {/* Το τελικό τεστ κλείνει τη διαδρομή του επιπέδου. */}
-                {l === 'beginner' && beginnerFinal && !q && (
-                  <Link href="/app/academy/final" className="finalcard">
-                    <span className="finalcard-ic">
-                      {beginnerFinal.passed ? <ICheck /> : <ILock />}
-                    </span>
-                    <span className="finalcard-txt">
-                      <span className="eyebrow sm">Κλεινει το επιπεδο</span>
-                      <b className="h2">{beginnerFinal.title ?? 'Τελικό τεστ'}</b>
-                      <em>
-                        {beginnerFinal.passed
-                          ? 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.'
-                          : `${beginnerFinal.needed} σωστές από ${beginnerFinal.total} για να ανοίξει το επόμενο επίπεδο.`}
-                      </em>
-                    </span>
-                    <span className="meta">{beginnerFinal.passed ? 'Ολοκληρώθηκε' : 'Δώσ’ το →'}</span>
-                  </Link>
-                )}
+                {/* Το τελικό τεστ κλείνει τη διαδρομή του επιπέδου. Το
+                    τελευταίο επίπεδο δεν ξεκλειδώνει κάτι επόμενο — το λέει. */}
+                {(() => {
+                  const fin = finalOf.get(l);
+                  if (!fin || q) return null;
+                  const last = i === LEVELS.length - 1;
+                  return (
+                    <Link href={`/app/academy/final/${l}`} className="finalcard">
+                      <span className="finalcard-ic">
+                        {fin.passed ? <ICheck /> : <ILock />}
+                      </span>
+                      <span className="finalcard-txt">
+                        <span className="eyebrow sm">Κλεινει το επιπεδο</span>
+                        <b className="h2">{fin.title ?? 'Τελικό τεστ'}</b>
+                        <em>
+                          {fin.passed
+                            ? last
+                              ? 'Το έχεις περάσει. Έκλεισες όλη την ύλη.'
+                              : 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.'
+                            : `${fin.needed} σωστές από ${fin.total}${last ? ' για να κλείσει η ύλη.' : ' για να ανοίξει το επόμενο επίπεδο.'}`}
+                        </em>
+                      </span>
+                      <span className="meta">{fin.passed ? 'Ολοκληρώθηκε' : 'Δώσ’ το →'}</span>
+                    </Link>
+                  );
+                })()}
 
               </>
             )}
