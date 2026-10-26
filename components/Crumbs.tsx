@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ISearch } from './Icons';
+import type { Lang } from '@/lib/i18n';
 
 /**
  * Η μπάρα πάνω από το περιεχόμενο.
@@ -31,10 +32,18 @@ const NAMES: Record<string, string> = {
   psychology: 'Ψυχολογία',
 };
 
-const pretty = (seg: string) =>
-  NAMES[seg] ?? decodeURIComponent(seg).replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+const NAMES_EN: Record<string, string> = {
+  app: 'Home', academy: 'Academy', journal: 'Trading Journal', telegram: 'Telegram',
+  backoffice: 'Back office', admin: 'Admin', settings: 'Settings',
+  final: 'Final test', certificate: 'Certificate', overall: 'Overall test',
+  beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced',
+  mindset: 'Mindset', psychology: 'Psychology',
+};
 
-export default function Crumbs() {
+const pretty = (seg: string, lang: Lang) =>
+  (lang === 'en' ? NAMES_EN : NAMES)[seg] ?? decodeURIComponent(seg).replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+export default function Crumbs({ lang = 'el' }: { lang?: Lang }) {
   const path = usePathname();
   const parts = path.split('/').filter(Boolean);
 
@@ -69,17 +78,17 @@ export default function Crumbs() {
       .then((d) => { if (alive) setTitles(d); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [path]);
+  }, [path, lang]);
 
   const crumbs = parts.map((seg, i) => ({
-    label: titles[seg] ?? pretty(seg),
+    label: titles[seg] ?? pretty(seg, lang),
     href: '/' + parts.slice(0, i + 1).join('/'),
     last: i === parts.length - 1,
   }));
 
   return (
     <header className="topbar">
-      <nav className="crumbs" aria-label="Διαδρομή">
+      <nav className="crumbs" aria-label={lang === 'en' ? 'Breadcrumb' : 'Διαδρομή'}>
         {crumbs.map((c) => (
           <span key={c.href}>
             {c.last ? <b>{c.label}</b> : <Link href={c.href}>{c.label}</Link>}
@@ -89,7 +98,7 @@ export default function Crumbs() {
       </nav>
       <form className="topsearch" action="/app/academy">
         <ISearch className="topsearch-ico" />
-        <input name="q" placeholder="Αναζήτηση στην ακαδημία" aria-label="Αναζήτηση" />
+        <input name="q" placeholder={lang === 'en' ? 'Search the academy' : 'Αναζήτηση στην ακαδημία'} aria-label={lang === 'en' ? 'Search' : 'Αναζήτηση'} />
       </form>
     </header>
   );

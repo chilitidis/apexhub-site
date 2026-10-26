@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Serif_Display } from 'next/font/google';
 import './globals.css';
+import { currentLang } from '@/lib/lang';
 
 /**
  * Η SERIF ΤΩΝ ΤΙΤΛΩΝ, για ΟΛΟ το site.
@@ -23,23 +24,42 @@ const serif = Noto_Serif_Display({
 
 /* Οι γραμματοσειρές φορτώνουν από Google Fonts με preconnect: και οι δύο
    έχουν ελληνικά, που είναι ο λόγος που επιλέχθηκαν. */
-export const metadata: Metadata = {
-  metadataBase: new URL('https://apexhub.gr'),
-  title: 'APEXHUB — Trading Community',
-  description:
-    'Μια ελληνική κοινότητα traders που μαθαίνουν μαζί, δουλεύουν με πειθαρχία '
-    + 'και μοιράζονται ό,τι ξέρουν. Κοινότητα, εκπαίδευση, ευκαιρία.',
-  openGraph: {
-    title: 'APEXHUB — Χτίζουμε ανθρώπους με αξία',
+const META = {
+  el: {
     description:
-      'Ένα πρότυπο. Μια κοινότητα. Trading, εκπαίδευση και στήριξη, κάθε μέρα στο Telegram.',
-    url: 'https://apexhub.gr',
-    siteName: 'APEXHUB',
+      'Μια ελληνική κοινότητα traders που μαθαίνουν μαζί, δουλεύουν με πειθαρχία '
+      + 'και μοιράζονται ό,τι ξέρουν. Κοινότητα, εκπαίδευση, ευκαιρία.',
+    ogTitle: 'APEXHUB — Χτίζουμε ανθρώπους με αξία',
+    ogDesc: 'Ένα πρότυπο. Μια κοινότητα. Trading, εκπαίδευση και στήριξη, κάθε μέρα στο Telegram.',
     locale: 'el_GR',
-    type: 'website',
   },
-  robots: { index: true, follow: true },
+  en: {
+    description:
+      'A trading community of people who learn together, work with discipline '
+      + 'and share what they know. Community, education, opportunity.',
+    ogTitle: 'APEXHUB — We build people of value',
+    ogDesc: 'One standard. One community. Trading, education and support, every day on Telegram.',
+    locale: 'en_GB',
+  },
 };
+
+export function generateMetadata(): Metadata {
+  const m = META[currentLang()];
+  return {
+    metadataBase: new URL('https://apexhub.gr'),
+    title: 'APEXHUB — Trading Community',
+    description: m.description,
+    openGraph: {
+      title: m.ogTitle,
+      description: m.ogDesc,
+      url: 'https://apexhub.gr',
+      siteName: 'APEXHUB',
+      locale: m.locale,
+      type: 'website',
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: '#0C0C0E',
@@ -50,7 +70,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="el" className={serif.variable}>
+    <html lang={currentLang()} className={serif.variable}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

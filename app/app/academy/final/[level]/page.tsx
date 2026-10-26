@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
 import { currentSession } from '@/lib/session';
 import {
-  viewerOf, catalogue, unlockedLevels, unlockedBy, LEVEL_EL, LEVEL_ORDER,
+  viewerOf, catalogue, unlockedLevels, unlockedBy, levelName, LEVEL_ORDER,
   type Level,
 } from '@/lib/academy';
 import {
@@ -12,6 +12,37 @@ import {
 } from '@/lib/quiz';
 import Quiz from '@/components/Quiz';
 import { ILock } from '@/components/Icons';
+import { currentLang } from '@/lib/lang';
+import type { Lang } from '@/lib/i18n';
+
+const T = {
+  el: {
+    level: 'Επιπεδο', notOpen: 'Αυτό το επίπεδο δεν έχει ανοίξει ακόμη.',
+    opensWith: (lv: string) => `Ανοίγει με το Τελικό τεστ ${lv === 'Αρχάριος' ? 'Αρχαρίων' : lv}.`,
+    preparing: 'Το περιεχόμενο ετοιμάζεται.', notDone: 'Δεν έχεις ολοκληρώσει ακόμη τη διαδρομή.',
+    trackNotDone: (c: string) => `Δεν έχεις τελειώσει ακόμη τα μαθήματα «${c}».`,
+    all: 'Ολη η ακαδημια', overallEnd: 'Το ολικό τεστ ανοίγει στο τέλος.',
+    missing: (n: number, list: string) => `Θέλει και τα πέντε τελικά τεστ περασμένα. Σου ${n === 1 ? 'λείπει' : 'λείπουν'}: ${list}.`,
+    finalT: 'Τελικό τεστ',
+    introDef: (total: number, need: number) => `${total} ερωτήσεις από όλη την ύλη. Χρειάζονται ${need} σωστές.`,
+    certE: 'Το πιστοποιητικο σου', ready: 'Είναι έτοιμο', certP: 'Με το όνομά σου, την ημερομηνία και το ποσοστό σου.', see: 'Δες το →',
+    back: 'Πίσω στην Ακαδημία',
+    left: (n: number) => `Το τελικό τεστ ανοίγει όταν τελειώσεις όλα τα μαθήματα. Σου ${n === 1 ? 'μένει 1 μάθημα' : `μένουν ${n} μαθήματα`}.`,
+  },
+  en: {
+    level: 'Level', notOpen: 'This level hasn’t opened yet.',
+    opensWith: (lv: string) => `It opens with the ${lv} Final test.`,
+    preparing: 'The content is being prepared.', notDone: 'You haven’t completed the path yet.',
+    trackNotDone: (c: string) => `You haven’t finished the “${c}” lessons yet.`,
+    all: 'The whole academy', overallEnd: 'The overall test opens at the end.',
+    missing: (_n: number, list: string) => `It requires all five final tests passed. Missing: ${list}.`,
+    finalT: 'Final test',
+    introDef: (total: number, need: number) => `${total} questions from the whole syllabus. You need ${need} correct.`,
+    certE: 'Your certificate', ready: 'It’s ready', certP: 'With your name, the date and your score.', see: 'View it →',
+    back: 'Back to the Academy',
+    left: (n: number) => `The final test opens when you finish all the lessons. ${n === 1 ? '1 lesson left' : `${n} lessons left`}.`,
+  },
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +83,8 @@ export default async function FinalQuizPage({
 
   const v = await viewerOf(s.tid);
   const courses = await catalogue(v);
+  const lang = currentLang();
+  const t = T[lang];
 
   let quiz: QuizView | null = null;
   let eyebrow = '';
@@ -61,7 +94,7 @@ export default async function FinalQuizPage({
     const level = key as Level;
     const [q, open] = await Promise.all([finalQuiz(s.tid, level), unlockedLevels(v)]);
     quiz = q;
-    eyebrow = `Επιπεδο ${LEVEL_ORDER.indexOf(level) + 1} · ${LEVEL_EL[level]}`;
+    eyebrow = `${t.level} ${LEVEL_ORDER.indexOf(level) + 1} · ${levelName(level, lang)}`;
 
     const prev = unlockedBy(level);
     const left = courses
@@ -70,13 +103,11 @@ export default async function FinalQuizPage({
 
     if (!open.has(level)) {
       blocked = {
-        title: 'Αυτό το επίπεδο δεν έχει ανοίξει ακόμη.',
-        why: prev
-          ? <>Ανοίγει με το Τελικό τεστ {LEVEL_EL[prev] === 'Αρχάριος' ? 'Αρχαρίων' : LEVEL_EL[prev]}.</>
-          : 'Το περιεχόμενο ετοιμάζεται.',
+        title: t.notOpen,
+        why: prev ? t.opensWith(levelName(prev, lang)) : t.preparing,
       };
     } else if (left > 0) {
-      blocked = { title: 'Δεν έχεις ολοκληρώσει ακόμη τη διαδρομή.', why: leftText(left) };
+      blocked = { title: t.notDone, why: leftText(left, lang) };
     }
   } else if (isTrack) {
     const course = courses.find((c) => c.slug === key);
@@ -84,22 +115,22 @@ export default async function FinalQuizPage({
     quiz = await trackQuiz(s.tid, course.id);
     eyebrow = course.title;
     const left = course.lessons - course.done;
-    if (left > 0) blocked = { title: `Δεν έχεις τελειώσει ακόμη τα μαθήματα «${course.title}».`, why: leftText(left) };
+    if (left > 0) blocked = { title: t.trackNotDone(course.title), why: leftText(left, lang) };
   } else {
     const [q, lv, tr] = await Promise.all([
       overallQuiz(s.tid), passedFinalLevels(s.tid), passedTracks(s.tid),
     ]);
     quiz = q;
-    eyebrow = 'Ολη η ακαδημια';
+    eyebrow = t.all;
 
     const missing = [
-      ...LEVEL_ORDER.filter((l) => !lv.has(l)).map((l) => LEVEL_EL[l]),
+      ...LEVEL_ORDER.filter((l) => !lv.has(l)).map((l) => levelName(l, lang)),
       ...courses.filter((c) => TRACKS.includes(c.slug) && !tr.has(c.id)).map((c) => c.title),
     ];
     if (missing.length) {
       blocked = {
-        title: 'Το ολικό τεστ ανοίγει στο τέλος.',
-        why: <>Θέλει και τα πέντε τελικά τεστ περασμένα. Σου {missing.length === 1 ? 'λείπει' : 'λείπουν'}: {missing.join(', ')}.</>,
+        title: t.overallEnd,
+        why: t.missing(missing.length, missing.join(', ')),
       };
     }
   }
@@ -111,10 +142,10 @@ export default async function FinalQuizPage({
     <>
       <header className="hero">
         <span className="eyebrow">{eyebrow}</span>
-        <h1 className="h1" style={{ marginTop: 14 }}>{quiz.title ?? 'Τελικό τεστ'}</h1>
+        <h1 className="h1" style={{ marginTop: 14 }}>{quiz.title ?? t.finalT}</h1>
         <p className="sub">
           {quiz.intro
-            ?? `${quiz.total} ερωτήσεις από όλη την ύλη. Χρειάζονται ${quiz.needed} σωστές.`}
+            ?? t.introDef(quiz.total, quiz.needed)}
         </p>
       </header>
 
@@ -123,11 +154,11 @@ export default async function FinalQuizPage({
       {key === 'overall' && quiz.passed && (
         <Link href="/app/academy/certificate" className="finalcard" style={{ marginTop: 28 }}>
           <span className="finalcard-txt">
-            <span className="eyebrow sm">Το πιστοποιητικο σου</span>
-            <b className="h2">Είναι έτοιμο</b>
-            <em>Με το όνομά σου, την ημερομηνία και το ποσοστό σου.</em>
+            <span className="eyebrow sm">{t.certE}</span>
+            <b className="h2">{t.ready}</b>
+            <em>{t.certP}</em>
           </span>
-          <span className="meta">Δες το →</span>
+          <span className="meta">{t.see}</span>
         </Link>
       )}
 
@@ -136,7 +167,7 @@ export default async function FinalQuizPage({
           <span className="gate2-ic"><ILock /></span>
           <b>{blocked.title}</b>
           <p>{blocked.why}</p>
-          <Link className="gold-btn" href="/app/academy">Πίσω στην Ακαδημία</Link>
+          <Link className="gold-btn" href="/app/academy">{t.back}</Link>
         </div>
       ) : (
         <Quiz
@@ -147,17 +178,13 @@ export default async function FinalQuizPage({
           attempts={quiz.attempts}
           nextTitle={null}
           final
+          lang={lang}
         />
       )}
     </>
   );
 }
 
-function leftText(left: number) {
-  return (
-    <>
-      Το τελικό τεστ ανοίγει όταν τελειώσεις όλα τα μαθήματα.
-      Σου {left === 1 ? 'μένει 1 μάθημα' : `μένουν ${left} μαθήματα`}.
-    </>
-  );
+function leftText(left: number, lang: Lang) {
+  return T[lang].left(left);
 }

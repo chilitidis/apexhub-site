@@ -6,6 +6,8 @@ import Link from 'next/link';
 import {
   IHome, IBook, IJournal, ISend, IBriefcase, IGear, IOut, IMenu, IShield,
 } from './Icons';
+import LangSwitch from './LangSwitch';
+import type { Lang } from '@/lib/i18n';
 
 type Item = {
   href: string; label: string; icon: React.ComponentType<{ className?: string }>;
@@ -13,9 +15,9 @@ type Item = {
 };
 
 export default function AppSidebar({
-  name, role, photo, isAdmin, isPartner, journalUrl, portalUrl,
+  name, role, photo, isAdmin, isPartner, journalUrl, portalUrl, lang = 'el',
 }: {
-  name: string; role: string; photo?: string;
+  name: string; role: string; photo?: string; lang?: Lang;
   isAdmin: boolean; isPartner: boolean; journalUrl: string; portalUrl: string;
 }) {
   const path = usePathname();
@@ -38,14 +40,15 @@ export default function AppSidebar({
      το περιεχόμενο που μόλις ζήτησε ο χρήστης. */
   useEffect(() => { setOpen(false); }, [path]);
 
+  const en = lang === 'en';
   const items: Item[] = [
-    { href: '/app',          label: 'Αρχική',          icon: IHome },
-    { href: '/app/academy',  label: 'Ακαδημία',        icon: IBook },
+    { href: '/app',          label: en ? 'Home' : 'Αρχική',          icon: IHome },
+    { href: '/app/academy',  label: en ? 'Academy' : 'Ακαδημία',     icon: IBook },
     { href: '/app/journal',  label: 'Trading Journal', icon: IJournal },
     { href: '/app/telegram', label: 'Telegram',        icon: ISend },
     { href: '/app/backoffice', label: 'Back office',   icon: IBriefcase, show: isPartner },
-    { href: '/app/admin',    label: 'Διαχείριση',      icon: IShield, show: isAdmin },
-    { href: '/app/settings', label: 'Ρυθμίσεις',       icon: IGear },
+    { href: '/app/admin',    label: en ? 'Admin' : 'Διαχείριση',     icon: IShield, show: isAdmin },
+    { href: '/app/settings', label: en ? 'Settings' : 'Ρυθμίσεις',   icon: IGear },
   ].filter((i) => i.show !== false);
 
   const active = (href: string) =>
@@ -53,11 +56,11 @@ export default function AppSidebar({
 
   return (
     <>
-      <button className="nav-burger" onClick={() => setOpen(true)} aria-label="Μενού">
+      <button className="nav-burger" onClick={() => setOpen(true)} aria-label={en ? 'Menu' : 'Μενού'}>
         <IMenu />
       </button>
 
-      {open && <button className="nav-scrim" onClick={() => setOpen(false)} aria-label="Κλείσιμο" />}
+      {open && <button className="nav-scrim" onClick={() => setOpen(false)} aria-label={en ? 'Close' : 'Κλείσιμο'} />}
 
       <aside className={`nav ${narrow ? 'nav-narrow' : ''} ${open ? 'nav-open' : ''}`}>
         <Link className="nav-brand" href="/app" aria-label="ApexHub">
@@ -105,11 +108,12 @@ export default function AppSidebar({
               <span className="nav-tier">{role}</span>
             </span>
           </div>
+          {!narrow && <LangSwitch lang={lang} className="nav-lang" />}
           <form action="/api/auth/logout" method="post">
-            <button className="nav-out" type="submit">Αποσύνδεση</button>
+            <button className="nav-out" type="submit">{en ? 'Log out' : 'Αποσύνδεση'}</button>
           </form>
           <button className="nav-collapse" onClick={toggleNarrow}
-                  aria-label={narrow ? 'Άνοιγμα μενού' : 'Σύμπτυξη μενού'}>
+                  aria-label={narrow ? (en ? 'Expand menu' : 'Άνοιγμα μενού') : (en ? 'Collapse menu' : 'Σύμπτυξη μενού')}>
             {narrow ? '»' : '«'}
           </button>
         </div>

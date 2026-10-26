@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentSession } from '@/lib/session';
 import { db } from '@/lib/db';
+import { currentLang } from '@/lib/lang';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,17 +21,19 @@ export async function GET(req: NextRequest) {
   const course = u.searchParams.get('course');
   const lesson = u.searchParams.get('lesson');
   const out: Record<string, string> = {};
+  const en = currentLang() === 'en';
+  const pick = (r: { title: string; title_en?: string | null }) => (en && r.title_en) || r.title;
 
   if (course) {
     const { data: c } = await db().from('courses')
-      .select('id, title').eq('slug', course).maybeSingle();
+      .select('id, title, title_en').eq('slug', course).maybeSingle();
     if (c) {
-      const row = c as { id: string; title: string };
-      out[course] = row.title;
+      const row = c as { id: string; title: string; title_en: string | null };
+      out[course] = pick(row);
       if (lesson) {
         const { data: l } = await db().from('lessons')
-          .select('title').eq('course_id', row.id).eq('slug', lesson).maybeSingle();
-        if (l) out[lesson] = (l as { title: string }).title;
+          .select('title, title_en').eq('course_id', row.id).eq('slug', lesson).maybeSingle();
+        if (l) out[lesson] = pick(l as { title: string; title_en: string | null });
       }
     }
   }

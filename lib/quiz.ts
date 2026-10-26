@@ -1,5 +1,6 @@
 import 'server-only';
 import { db } from './db';
+import { currentLang } from './lang';
 
 /**
  * =============================================================================
@@ -68,9 +69,28 @@ export interface QuizResult {
 type Row = {
   id: string; kind: QuizKind; title: string | null; intro: string | null;
   pass_pct: number; questions: QuizQuestion[]; status: string;
+  title_en?: string | null; intro_en?: string | null;
+  questions_en?: Array<{ q: string; o: string[]; w?: string; l?: number }> | null;
 };
 
-const COLS = 'id, kind, title, intro, pass_pct, questions, status';
+const COLS = 'id, kind, title, intro, pass_pct, questions, status, title_en, intro_en, questions_en';
+
+/**
+ * Η ερώτηση στη γλώσσα της σελίδας.
+ *
+ * Η σωστή απάντηση (`a`) έρχεται ΠΑΝΤΑ από το ελληνικό: το αγγλικό κρατά τις
+ * επιλογές με την ίδια σειρά, οπότε ο ίδιος δείκτης δείχνει την ίδια επιλογή.
+ * Αν το αγγλικό δεν ταιριάζει σε σχήμα (άλλο πλήθος ερωτήσεων ή επιλογών),
+ * δεν το εμπιστευόμαστε και μένει το ελληνικό — ένα λάθος εδώ θα έβγαζε
+ * σωστή μια λάθος απάντηση.
+ */
+function localQuestions(row: Row): QuizQuestion[] {
+  const en = row.questions_en;
+  if (currentLang() !== 'en' || !Array.isArray(en) || en.length !== row.questions.length) return row.questions;
+  const ok = row.questions.every((g, i) => Array.isArray(en[i]?.o) && en[i].o.length === g.o.length && en[i].q);
+  if (!ok) return row.questions;
+  return row.questions.map((g, i) => ({ ...g, q: en[i].q, o: en[i].o, w: en[i].w ?? g.w }));
+}
 
 /**
  * Το κατώφλι σε απόλυτο αριθμό σωστών.
@@ -99,10 +119,13 @@ async function attemptsOf(tid: number, quizId: string) {
 
 function view(row: Row, a: Awaited<ReturnType<typeof attemptsOf>>): QuizView {
   const total = row.questions.length;
+  const en = currentLang() === 'en';
   return {
-    id: row.id, kind: row.kind, title: row.title, intro: row.intro,
+    id: row.id, kind: row.kind,
+    title: (en && row.title_en) || row.title,
+    intro: (en && row.intro_en) || row.intro,
     total, pass_pct: row.pass_pct, needed: needed(total, row.pass_pct),
-    questions: strip(row.questions),
+    questions: strip(localQuestions(row)),
     passed: a.passed, attempts: a.attempts, best: a.best,
   };
 }
@@ -110,7 +133,7 @@ function view(row: Row, a: Awaited<ReturnType<typeof attemptsOf>>): QuizView {
 /** Το τεστ ενός μαθήματος, όπως το βλέπει ο συγκεκριμένος χρήστης. */
 export async function quizForLesson(tid: number, lessonId: string): Promise<QuizView | null> {
   const { data } = await db().from('quizzes')
-    .select('id, kind, title, intro, pass_pct, questions, status')
+    .select(COLS)
     .eq('lesson_id', lessonId).eq('status', 'published').maybeSingle();
   const row = data as Row | null;
   if (!row || !row.questions?.length) return null;
@@ -120,7 +143,7 @@ export async function quizForLesson(tid: number, lessonId: string): Promise<Quiz
 /** Το τελικό τεστ ενός επιπέδου. */
 export async function finalQuiz(tid: number, level: string): Promise<QuizView | null> {
   const { data } = await db().from('quizzes')
-    .select('id, kind, title, intro, pass_pct, questions, status')
+    .select(COLS)
     .eq('level', level).eq('status', 'published').maybeSingle();
   const row = data as Row | null;
   if (!row || !row.questions?.length) return null;
@@ -268,17 +291,18 @@ export async function gradeQuiz(
 ): Promise<QuizResult | null> {
   const s = db();
   const { data } = await s.from('quizzes')
-    .select('id, pass_pct, questions, status').eq('id', quizId).maybeSingle();
+    .select('id, pass_pct, questions, questions_en, status').eq('id', quizId).maybeSingle();
   const row = data as Row | null;
   if (!row || row.status !== 'published' || !row.questions?.length) return null;
 
   const qs = row.questions;
   const total = qs.length;
+  const shown = localQuestions(row);   // μόνο για τις εξηγήσεις· η βαθμολόγηση μένει στο `qs`
   const review = qs.map((x, i) => {
     const raw = answers[i];
     const chosen = Number.isInteger(raw) && (raw as number) >= 0 && (raw as number) < x.o.length
       ? (raw as number) : null;
-    return { correct: x.a, chosen, why: x.w ?? null };
+    return { correct: x.a, chosen, why: shown[i]?.w ?? x.w ?? null };
   });
   const score = review.filter((r) => r.chosen === r.correct).length;
   const need = needed(total, row.pass_pct);

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { currentSession } from '@/lib/session';
-import { viewerOf, courseBySlug, LEVEL_EL } from '@/lib/academy';
+import { viewerOf, courseBySlug, levelName } from '@/lib/academy';
+import { currentLang } from '@/lib/lang';
 import { ILock, ICheck, IPlay } from '@/components/Icons';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,8 @@ export default async function CoursePage({ params }: { params: { course: string 
   if (!data) notFound();
 
   const { course, modules, total, done } = data;
+  const lang = currentLang();
+  const en = lang === 'en';
 
   /**
    * ΧΩΡΙΣ ΕΝΔΙΑΜΕΣΗ ΣΕΛΙΔΑ.
@@ -39,13 +42,13 @@ export default async function CoursePage({ params }: { params: { course: string 
     <>
       <h1 className="h1">
         {course.title}{' '}
-        {course.title.startsWith('Δείγμα') && <span className="tagdemo">Δείγμα</span>}
+        {(course.title.startsWith('Δείγμα') || course.title.startsWith('Sample')) && <span className="tagdemo">{en ? 'Sample' : 'Δείγμα'}</span>}
       </h1>
       {course.subtitle && <p className="sub">{course.subtitle}</p>}
 
       <div className="card2 coursehead">
         <div>
-          <span className="meta">{LEVEL_EL[course.level]} · {total} μαθήματα</span>
+          <span className="meta">{levelName(course.level, lang)} · {total} {en ? 'lessons' : 'μαθήματα'}</span>
           <div className="bar" style={{ marginTop: 10, maxWidth: 320 }}>
             <span style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
           </div>
@@ -57,7 +60,7 @@ export default async function CoursePage({ params }: { params: { course: string 
 
       <div className="sec">
         {modules.length === 0 ? (
-          <div className="empty2"><b>Δεν υπάρχουν ακόμη ενότητες.</b>Το περιεχόμενο ανεβαίνει σταδιακά.</div>
+          <div className="empty2"><b>{en ? 'No modules yet.' : 'Δεν υπάρχουν ακόμη ενότητες.'}</b>{en ? 'Content is being added gradually.' : 'Το περιεχόμενο ανεβαίνει σταδιακά.'}</div>
         ) : modules.map((m, mi) => (
           /* Ανοιχτή η πρώτη ενότητα: ο χρήστης βλέπει αμέσως τι περιέχει το
              μάθημα αντί για μια λίστα από κλειστά κουτιά. */

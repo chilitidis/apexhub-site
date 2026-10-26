@@ -11,7 +11,7 @@ import { ICheck } from './Icons';
  * server διαφωνήσει. Το ίδιο κλικ δέκα φορές την ημέρα δεν πρέπει να περιμένει
  * ταξίδι στο δίκτυο για να δείξει ότι το άκουσε.
  */
-export default function DoneButton({ lessonId, done }: { lessonId: string; done: boolean }) {
+export default function DoneButton({ lessonId, done, lang = 'el' }: { lessonId: string; done: boolean; lang?: 'el' | 'en' }) {
   const [on, setOn] = useState(done);
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function DoneButton({ lessonId, done }: { lessonId: string; done:
 
   return (
     <button className={on ? 'donebtn on' : 'donebtn'} onClick={toggle} disabled={pending} type="button">
-      <ICheck /> {on ? 'Ολοκληρώθηκε' : 'Σήμανση ως ολοκληρωμένο'}
+      <ICheck /> {lang === 'en' ? (on ? 'Completed' : 'Mark as completed') : (on ? 'Ολοκληρώθηκε' : 'Σήμανση ως ολοκληρωμένο')}
     </button>
   );
 }

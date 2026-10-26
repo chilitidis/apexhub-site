@@ -2,11 +2,61 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentSession } from '@/lib/session';
 import {
-  viewerOf, catalogue, unlockedLevels, unlockedBy, LEVEL_EL,
+  viewerOf, catalogue, unlockedLevels, unlockedBy, levelName,
   type Level, type CourseView,
 } from '@/lib/academy';
 import { finalQuiz, trackQuiz, overallQuiz, type QuizView } from '@/lib/quiz';
 import { ILock, ICheck } from '@/components/Icons';
+import { currentLang } from '@/lib/lang';
+
+const T = {
+  el: {
+    finalT: 'Τελικό τεστ', done: 'Ολοκληρώθηκε', go: 'Δώσ’ το →', of: 'σωστές από',
+    draft: 'Πρόχειρο', lessons: 'μαθήματα', minutes: 'λεπτά',
+    h1: 'Ακαδημία',
+    sub: 'Δομημένη διαδρομή. Κάθε ενότητα πατάει στην προηγούμενη, και κάθε επίπεδο ανοίγει με το τελικό του τεστ.',
+    lvGroup: 'Επίπεδο', all: 'Όλα',
+    noHit: 'Δεν βρέθηκε ενότητα.', tryOther: (q: string) => `Δοκίμασε άλλον όρο από το «${q}».`,
+    level: 'Επιπεδο',
+    notOpen: 'Δεν έχει ανοίξει ακόμη',
+    waiting: (n: number) => `${n === 1 ? 'Μία ενότητα' : `${n} ενότητες`} σε αναμονή`,
+    unlocksWith: (lv: string) => `Ξεκλειδώνει με το Τελικό τεστ ${lv === 'Αρχάριος' ? 'Αρχαρίων' : lv}.`,
+    preparing: 'Το περιεχόμενο ετοιμάζεται.',
+    closesLevel: 'Κλεινει το επιπεδο',
+    passedLast: 'Το έχεις περάσει. Έκλεισες τη διαδρομή των επιπέδων.',
+    passedNext: 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.',
+    todoLast: 'για να κλείσει η διαδρομή.', todoNext: 'για να ανοίξει το επόμενο επίπεδο.',
+    mind: 'Το μυαλο του trader', mindSub: 'Ανοιχτά από την πρώτη μέρα, σε όποιο επίπεδο κι αν βρίσκεσαι.',
+    closesTrack: 'Κλεινει την ενοτητα',
+    trackDone: 'Το έχεις περάσει. Μετράει για το ολικό τεστ.', trackTodo: 'για να μετρήσει στο ολικό τεστ.',
+    end: 'Το τελος της διαδρομης', allAcademy: 'Ολη η ακαδημια',
+    overallDone: 'Το πέρασες. Το πιστοποιητικό σου είναι έτοιμο.', overallTodo: 'για το πιστοποιητικό ολοκλήρωσης.',
+    cert: 'Πιστοποιητικο', certT: 'Το πιστοποιητικό σου', certP: 'Με το όνομά σου, την ημερομηνία και το ποσοστό σου.', see: 'Δες το →',
+  },
+  en: {
+    finalT: 'Final test', done: 'Completed', go: 'Take it →', of: 'correct out of',
+    draft: 'Draft', lessons: 'lessons', minutes: 'min',
+    h1: 'Academy',
+    sub: 'A structured path. Each course builds on the previous one, and each level opens with its final test.',
+    lvGroup: 'Level', all: 'All',
+    noHit: 'No course found.', tryOther: (q: string) => `Try a different term than “${q}”.`,
+    level: 'Level',
+    notOpen: 'Not open yet',
+    waiting: (n: number) => `${n === 1 ? 'One course' : `${n} courses`} waiting`,
+    unlocksWith: (lv: string) => `Unlocks with the ${lv} Final test.`,
+    preparing: 'The content is being prepared.',
+    closesLevel: 'Closes the level',
+    passedLast: 'You’ve passed it. You have completed the level path.',
+    passedNext: 'You’ve passed it. The next level is waiting for you.',
+    todoLast: 'to complete the path.', todoNext: 'to open the next level.',
+    mind: 'The trader’s mind', mindSub: 'Open from day one, whatever level you are at.',
+    closesTrack: 'Closes the course',
+    trackDone: 'You’ve passed it. It counts towards the overall test.', trackTodo: 'to count towards the overall test.',
+    end: 'The end of the path', allAcademy: 'The whole academy',
+    overallDone: 'You passed it. Your certificate is ready.', overallTodo: 'for the certificate of completion.',
+    cert: 'Certificate', certT: 'Your certificate', certP: 'With your name, the date and your score.', see: 'View it →',
+  },
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +79,8 @@ export default async function Catalogue({
   const s = currentSession();
   if (!s) redirect('/login');
   const v = await viewerOf(s.tid);
+  const lang = currentLang();
+  const t = T[lang];
   /* ΤΟ ΤΕΛΙΚΟ ΤΕΣΤ ΚΑΘΕ ΕΠΙΠΕΔΟΥ, ΟΧΙ ΜΟΝΟ ΤΟΥ ΑΡΧΑΡΙΟΥ. Όσο υπήρχε ένα
      μόνο τεστ, η σελίδα το ζητούσε με το όνομά του. Με τρία επίπεδα αυτό θα
      έδειχνε διαδρομές που τελειώνουν πουθενά: ο Μεσαίος θα τελείωνε χωρίς
@@ -79,10 +131,10 @@ export default async function Catalogue({
       <span className="finalcard-ic">{fin.passed ? <ICheck /> : <ILock />}</span>
       <span className="finalcard-txt">
         <span className="eyebrow sm">{eyebrow}</span>
-        <b className="h2">{fin.title ?? 'Τελικό τεστ'}</b>
-        <em>{fin.passed ? done : `${fin.needed} σωστές από ${fin.total} ${todo}`}</em>
+        <b className="h2">{fin.title ?? t.finalT}</b>
+        <em>{fin.passed ? done : `${fin.needed} ${t.of} ${fin.total} ${todo}`}</em>
       </span>
-      <span className="meta">{fin.passed ? 'Ολοκληρώθηκε' : 'Δώσ’ το →'}</span>
+      <span className="meta">{fin.passed ? t.done : t.go}</span>
     </Link>
   );
 
@@ -92,13 +144,13 @@ export default async function Catalogue({
       <span className="course-cover">
         <span className="cover-art"><span>{c.title}</span></span>
         {c.locked && <span className="lockpill"><ILock /></span>}
-        {c.status === 'draft' && <span className="draftpill">Πρόχειρο</span>}
+        {c.status === 'draft' && <span className="draftpill">{t.draft}</span>}
       </span>
       <span className="course-body">
         <b className="h2">{c.title}</b>
         {c.subtitle && <span className="course-sub">{c.subtitle}</span>}
         <span className="meta num course-facts">
-          {c.lessons} μαθήματα{c.minutes ? ` · ${c.minutes} λεπτά` : ''}
+          {c.lessons} {t.lessons}{c.minutes ? ` · ${c.minutes} ${t.minutes}` : ''}
         </span>
         <span className="course-prog">
           <span className="bar">
@@ -113,25 +165,22 @@ export default async function Catalogue({
   return (
     <>
       <header className="hero">
-        <h1 className="h1">Ακαδημία</h1>
-        <p className="sub">
-          Δομημένη διαδρομή. Κάθε ενότητα πατάει στην προηγούμενη, και κάθε
-          επίπεδο ανοίγει με το τελικό του τεστ.
-        </p>
+        <h1 className="h1">{t.h1}</h1>
+        <p className="sub">{t.sub}</p>
       </header>
 
       {/* Segmented control: ένα πλαίσιο, ο δείκτης γλιστράει μέσα του. */}
-      <div className="seg" role="group" aria-label="Επίπεδο">
-        <Link href={href('')} className={!level ? 'on' : ''}>Όλα</Link>
+      <div className="seg" role="group" aria-label={t.lvGroup}>
+        <Link href={href('')} className={!level ? 'on' : ''}>{t.all}</Link>
         {LEVELS.map((l) => (
-          <Link key={l} href={href(l)} className={level === l ? 'on' : ''}>{LEVEL_EL[l]}</Link>
+          <Link key={l} href={href(l)} className={level === l ? 'on' : ''}>{levelName(l, lang)}</Link>
         ))}
       </div>
 
       {q && hits.length === 0 && (
         <div className="empty2" style={{ marginTop: 28 }}>
-          <b>Δεν βρέθηκε ενότητα.</b>
-          Δοκίμασε άλλον όρο από το «{q}».
+          <b>{t.noHit}</b>
+          {t.tryOther(q)}
         </div>
       )}
 
@@ -149,7 +198,7 @@ export default async function Catalogue({
         return (
           <section className="sec level" key={l}>
             <div className="sec-top">
-              <h2>Επιπεδο {i + 1} · {LEVEL_EL[l].toUpperCase()}</h2>
+              <h2>{t.level} {i + 1} · {levelName(l, lang).toUpperCase()}</h2>
             </div>
 
             {empty || locked ? (
@@ -157,12 +206,12 @@ export default async function Catalogue({
                 <span className="locked-ic"><ILock /></span>
                 <div>
                   <b className="h2">
-                    {empty ? 'Δεν έχει ανοίξει ακόμη' : `${path.length === 1 ? 'Μία ενότητα' : `${path.length} ενότητες`} σε αναμονή`}
+                    {empty ? t.notOpen : t.waiting(path.length)}
                   </b>
                   <p>
                     {prev
-                      ? <>Ξεκλειδώνει με το Τελικό τεστ {LEVEL_EL[prev] === 'Αρχάριος' ? 'Αρχαρίων' : LEVEL_EL[prev]}.</>
-                      : 'Το περιεχόμενο ετοιμάζεται.'}
+                      ? t.unlocksWith(levelName(prev, lang))
+                      : t.preparing}
                   </p>
                 </div>
               </div>
@@ -177,11 +226,9 @@ export default async function Catalogue({
                   if (!fin || q) return null;
                   const last = i === LEVELS.length - 1;
                   return testCard(
-                    `/app/academy/final/${l}`, fin, 'Κλεινει το επιπεδο',
-                    last
-                      ? 'Το έχεις περάσει. Έκλεισες τη διαδρομή των επιπέδων.'
-                      : 'Το έχεις περάσει. Το επόμενο επίπεδο σε περιμένει.',
-                    last ? 'για να κλείσει η διαδρομή.' : 'για να ανοίξει το επόμενο επίπεδο.',
+                    `/app/academy/final/${l}`, fin, t.closesLevel,
+                    last ? t.passedLast : t.passedNext,
+                    last ? t.todoLast : t.todoNext,
                   );
                 })()}
 
@@ -196,11 +243,9 @@ export default async function Catalogue({
       {tracks.length > 0 && !level && (
         <section className="sec level">
           <div className="sec-top">
-            <h2>Το μυαλο του trader</h2>
+            <h2>{t.mind}</h2>
           </div>
-          <p className="sub tracks-sub">
-            Ανοιχτά από την πρώτη μέρα, σε όποιο επίπεδο κι αν βρίσκεσαι.
-          </p>
+          <p className="sub tracks-sub">{t.mindSub}</p>
           <div className="grid g3">{tracks.map(card)}</div>
 
           {/* Ένα τελικό τεστ ανά track. Δεν ξεκλειδώνουν επίπεδο — μετράνε
@@ -208,9 +253,9 @@ export default async function Catalogue({
           {!q && tracks.map((c, n) => {
             const fin = trackFinals[n];
             return fin ? testCard(
-              `/app/academy/final/${c.slug}`, fin, 'Κλεινει την ενοτητα',
-              'Το έχεις περάσει. Μετράει για το ολικό τεστ.',
-              'για να μετρήσει στο ολικό τεστ.',
+              `/app/academy/final/${c.slug}`, fin, t.closesTrack,
+              t.trackDone,
+              t.trackTodo,
             ) : null;
           })}
         </section>
@@ -221,22 +266,22 @@ export default async function Catalogue({
       {overall && !q && !level && (
         <section className="sec level">
           <div className="sec-top">
-            <h2>Το τελος της διαδρομης</h2>
+            <h2>{t.end}</h2>
           </div>
           {testCard(
-            '/app/academy/final/overall', overall, 'Ολη η ακαδημια',
-            'Το πέρασες. Το πιστοποιητικό σου είναι έτοιμο.',
-            'για το πιστοποιητικό ολοκλήρωσης.',
+            '/app/academy/final/overall', overall, t.allAcademy,
+            t.overallDone,
+            t.overallTodo,
           )}
           {overall.passed && (
             <Link href="/app/academy/certificate" className="finalcard">
               <span className="finalcard-ic"><ICheck /></span>
               <span className="finalcard-txt">
-                <span className="eyebrow sm">Πιστοποιητικο</span>
-                <b className="h2">Το πιστοποιητικό σου</b>
-                <em>Με το όνομά σου, την ημερομηνία και το ποσοστό σου.</em>
+                <span className="eyebrow sm">{t.cert}</span>
+                <b className="h2">{t.certT}</b>
+                <em>{t.certP}</em>
               </span>
-              <span className="meta">Δες το →</span>
+              <span className="meta">{t.see}</span>
             </Link>
           )}
         </section>

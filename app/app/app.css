@@ -759,3 +759,6 @@ a.card2.course:hover b.h2{ color:var(--gold) }
   word-break:break-word }
 .errbox code{ display:inline-block; margin-top:10px; font-family:var(--mono);
   font-size:11px; color:var(--fg3) }
+
+/* Το EL/EN στο κάτω μέρος του μενού, πάνω από την αποσύνδεση. */
+.nav-lang{ margin:0 0 10px }

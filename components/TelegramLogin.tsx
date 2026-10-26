@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from 'react';
  * /setdomain → apexhub.gr. Χωρίς αυτό το κουμπί απλά δεν εμφανίζεται ποτέ,
  * χωρίς κανένα μήνυμα. Γι' αυτό δείχνουμε δική μας εξήγηση αν αργήσει.
  */
-export default function TelegramLogin({ bot, authUrl }: { bot: string; authUrl: string }) {
+export default function TelegramLogin({ bot, authUrl, lang = 'el' }: { bot: string; authUrl: string; lang?: 'el' | 'en' }) {
   const ref = useRef<HTMLDivElement>(null);
   const started = useRef(false);
   const [stuck, setStuck] = useState(false);
@@ -30,22 +30,23 @@ export default function TelegramLogin({ bot, authUrl }: { bot: string; authUrl: 
     s.setAttribute('data-radius', '20');
     s.setAttribute('data-userpic', 'false');
     s.setAttribute('data-auth-url', authUrl);
+    s.setAttribute('data-lang', lang);
     ref.current.appendChild(s);
 
     const t = setTimeout(() => {
       if (!ref.current?.querySelector('iframe')) setStuck(true);
     }, 6000);
     return () => clearTimeout(t);
-  }, [bot, authUrl]);
+  }, [bot, authUrl, lang]);
 
   return (
     <div>
       <div ref={ref} style={{ minHeight: 48 }} />
       {stuck && (
         <p className="note" style={{ marginTop: 14 }}>
-          Το κουμπί του Telegram δεν φόρτωσε. Συνήθως φταίει ένας αποκλειστής
-          διαφημίσεων ή πολύ αυστηρές ρυθμίσεις απορρήτου. Δοκίμασε άλλο
-          πρόγραμμα περιήγησης.
+          {lang === 'en'
+            ? 'The Telegram button did not load. This is usually caused by an ad blocker or very strict privacy settings. Try another browser.'
+            : 'Το κουμπί του Telegram δεν φόρτωσε. Συνήθως φταίει ένας αποκλειστής διαφημίσεων ή πολύ αυστηρές ρυθμίσεις απορρήτου. Δοκίμασε άλλο πρόγραμμα περιήγησης.'}
         </p>
       )}
     </div>

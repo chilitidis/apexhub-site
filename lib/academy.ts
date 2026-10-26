@@ -1,6 +1,8 @@
 import 'server-only';
 import { db } from './db';
 import { lessonsWithQuiz, passedLessons, passedFinalLevels } from './quiz';
+import { currentLang } from './lang';
+import { loc, type Lang } from './i18n';
 
 /**
  * =============================================================================
@@ -28,6 +30,16 @@ export type Level = 'beginner' | 'intermediate' | 'advanced';
 export const LEVEL_EL: Record<Level, string> = {
   beginner: 'Αρχάριος', intermediate: 'Μεσαίος', advanced: 'Προχωρημένος',
 };
+export const LEVEL_EN: Record<Level, string> = {
+  beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced',
+};
+/** Το όνομα του επιπέδου στη γλώσσα της σελίδας. */
+export const levelName = (lv: Level, lang: Lang) => (lang === 'en' ? LEVEL_EN : LEVEL_EL)[lv];
+
+/* Τα πεδία που έχουν αγγλικό δίδυμο στη βάση (`<πεδίο>_en`). */
+const C_F = ['title', 'subtitle', 'description'];
+const M_F = ['title', 'summary'];
+const L_F = ['title', 'summary', 'body'];
 
 /** Η σειρά των επιπέδων. Από αυτήν βγαίνει ποιο ξεκλειδώνει ποιο. */
 export const LEVEL_ORDER: Level[] = ['beginner', 'intermediate', 'advanced'];
@@ -214,8 +226,9 @@ export async function catalogue(v: Viewer): Promise<CourseView[]> {
       .filter((p) => p.completed_at).map((p) => p.lesson_id),
   );
 
+  const lang = currentLang();
   return (courses ?? []).map((raw) => {
-    const c = raw as unknown as Course;
+    const c = loc(raw as unknown as Course, lang, C_F);
     const ls = ((lessons ?? []) as Array<{ id: string; course_id: string; module_id: string; is_free: boolean; duration_sec: number | null; status: string }>)
       .filter((l) => l.course_id === c.id && (v.admin || l.status === 'published'));
     const levelLocked = !open.has(c.level);
@@ -236,7 +249,8 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
   const slug = urlSlug(rawSlug);
   const { data: c } = await s.from('courses').select('*').eq('slug', slug).maybeSingle();
   if (!c) return null;
-  const course = c as unknown as Course;
+  const lang = currentLang();
+  const course = loc(c as unknown as Course, lang, C_F);
   if (course.status !== 'published' && !v.admin) return null;
 
   const [{ data: mods }, { data: les }, { data: prog }, am, open] = await Promise.all([
@@ -261,11 +275,13 @@ export async function courseBySlug(v: Viewer, rawSlug: string) {
 
   const modules = ((mods ?? []) as unknown as Module[])
     .filter((m) => v.admin || m.status === 'published')
-    .map((m) => {
+    .map((m0) => {
+      const m = loc(m0, lang, M_F);
       const modLocked = courseLocked || !allowed(v, am.get(`module:${m.id}`));
       const items = ((les ?? []) as unknown as Lesson[])
         .filter((l) => l.module_id === m.id && (v.admin || l.status === 'published'))
-        .map((l) => {
+        .map((l0) => {
+          const l = loc(l0, lang, L_F);
           /* Το `is_free` ανοίγει ένα μάθημα μέσα σε κλειδωμένο ΠΑΚΕΤΟ — είναι
              το δείγμα. Δεν ανοίγει όμως κλειδωμένο ΕΠΙΠΕΔΟ: εκεί η σειρά της
              ύλης είναι ο λόγος, και ένα δείγμα θα την έσπαγε. */
@@ -364,9 +380,12 @@ export async function lessonBySlug(v: Viewer, courseSlug: string, lessonSlug: st
      φεύγει από τον server. Το κλείδωμα δεν είναι διακοσμητικό CSS. */
   if (!head.locked && !head.gated) {
     const { data: l } = await db().from('lessons')
-      .select('body, vimeo_id').eq('id', head.id).maybeSingle();
-    body = (l as { body: string | null } | null)?.body ?? null;
-    vimeo = (l as { vimeo_id: string | null } | null)?.vimeo_id ?? null;
+      .select('body, body_en, vimeo_id, vimeo_id_en').eq('id', head.id).maybeSingle();
+    /* Αγγλικά: αγγλικό κείμενο και αγγλικό βίντεο όπου υπάρχουν, αλλιώς το
+       ελληνικό. Ένα μάθημα που δεν έχει ακόμη αγγλική εκδοχή δεν κλειδώνει. */
+    const row = loc((l ?? {}) as { body: string | null; vimeo_id: string | null }, currentLang(), ['body', 'vimeo_id']);
+    body = row.body ?? null;
+    vimeo = row.vimeo_id ?? null;
     const { data: f } = await db().from('lesson_files')
       .select('*').eq('lesson_id', head.id).order('sort');
     files = (f ?? []) as unknown as LessonFile[];
@@ -449,10 +468,14 @@ export async function resumePoint(v: Viewer) {
   if (!open) return null;
 
   const { data: l } = await db().from('lessons')
-    .select('slug, title, course_id, courses(slug, title)').eq('id', open.lesson_id).maybeSingle();
+    .select('slug, title, title_en, course_id, courses(slug, title, title_en)').eq('id', open.lesson_id).maybeSingle();
   if (!l) return null;
-  const row = l as unknown as { slug: string; title: string; courses: { slug: string; title: string } | { slug: string; title: string }[] };
-  const c = Array.isArray(row.courses) ? row.courses[0] : row.courses;
+  type T = { slug: string; title: string; title_en?: string | null };
+  const lang = currentLang();
+  const row0 = l as unknown as T & { courses: T | T[] };
+  const row = loc(row0, lang, ['title']);
+  const c0 = Array.isArray(row0.courses) ? row0.courses[0] : row0.courses;
+  const c = c0 ? loc(c0, lang, ['title']) : c0;
   /* Η πρόοδος ΤΟΥ μαθήματος στο οποίο επιστρέφει: χωρίς αυτήν η κάρτα λέει
      «συνέχισε» χωρίς να δείχνει πόσο έχει μείνει. */
   const { data: sibs } = await db().from('lessons')

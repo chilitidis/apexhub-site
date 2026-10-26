@@ -9,6 +9,7 @@
  * ήδη κρατάει μόνο το πιστοποιητικό στη σελίδα.
  */
 export default function PrintButton({ label = 'Κατέβασέ το' }: { label?: string }) {
+  /* Το label το δίνει η σελίδα, στη γλώσσα της. */
   return (
     <button type="button" className="gold-btn" onClick={() => window.print()}>
       {label}
