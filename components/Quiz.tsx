@@ -4,6 +4,41 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ICheck, ILock } from './Icons';
 
+const T = {
+  el: {
+    finalH: 'Τελικό τεστ', lessonH: 'Τεστ μαθήματος', nextLevel: 'το επόμενο επίπεδο', nextLesson: 'το επόμενο μάθημα',
+    err: 'Η υποβολή δεν ολοκληρώθηκε. Δοκίμασε ξανά σε λίγο.',
+    passedB: 'Το έχεις περάσει.', passedP: 'Μπορείς να το ξαναδώσεις όποτε θέλεις, για επανάληψη.', again: 'Ξανά',
+    endLevel: 'Τελος επιπεδου', endLesson: 'Τελος μαθηματος', nextStep: 'Επόμενο βήμα: Άσκηση',
+    gate: (need: number, total: number, unl: string) => `${need} σωστές από ${total}. Χωρίς αυτό δεν ξεκλειδώνει ${unl}`,
+    goEx: 'Πήγαινε στην άσκηση',
+    attempts: (n: number) => (n === 1 ? 'Μία προσπάθεια μέχρι τώρα' : `${n} προσπάθειες μέχρι τώρα`),
+    toOpen: (need: number, total: number, unl: string) => `${need} σωστές από ${total} για να ανοίξει ${unl}`,
+    soFar: (n: number) => ` Προσπάθειες μέχρι τώρα: ${n}.`,
+    checking: 'Γίνεται έλεγχος…', submit: 'Υποβολή',
+    left: (n: number) => (n === 1 ? 'Μένει 1 ερώτηση' : `Μένουν ${n} ερωτήσεις`),
+    pass: 'πέρασες', fail: 'δεν πέρασες',
+    opened: (x: string) => `Το επόμενο μάθημα άνοιξε: ${x}.`, levelOpened: 'Το επόμενο επίπεδο άνοιξε.', lessonOpened: 'Το επόμενο μάθημα άνοιξε.',
+    need: (n: number) => `Χρειάζονται ${n} σωστές. Διάβασε τις εξηγήσεις και ξαναδοκίμασε — δεν υπάρχει όριο προσπαθειών.`,
+  },
+  en: {
+    finalH: 'Final test', lessonH: 'Lesson test', nextLevel: 'the next level', nextLesson: 'the next lesson',
+    err: 'The submission did not go through. Try again shortly.',
+    passedB: 'You’ve passed it.', passedP: 'You can retake it whenever you want, for revision.', again: 'Again',
+    endLevel: 'End of level', endLesson: 'End of lesson', nextStep: 'Next step: Exercise',
+    gate: (need: number, total: number, unl: string) => `${need} correct out of ${total}. Without it, ${unl} stays locked`,
+    goEx: 'Go to the exercise',
+    attempts: (n: number) => (n === 1 ? 'One attempt so far' : `${n} attempts so far`),
+    toOpen: (need: number, total: number, unl: string) => `${need} correct out of ${total} to open ${unl}`,
+    soFar: (n: number) => ` Attempts so far: ${n}.`,
+    checking: 'Checking…', submit: 'Submit',
+    left: (n: number) => (n === 1 ? '1 question left' : `${n} questions left`),
+    pass: 'passed', fail: 'not passed',
+    opened: (x: string) => `The next lesson is open: ${x}.`, levelOpened: 'The next level is open.', lessonOpened: 'The next lesson is open.',
+    need: (n: number) => `You need ${n} correct. Read the explanations and try again — there is no limit on attempts.`,
+  },
+};
+
 /**
  * =============================================================================
  * Το τεστ του μαθήματος
@@ -25,7 +60,7 @@ interface Review { correct: number; chosen: number | null; why: string | null }
 interface Result { score: number; total: number; needed: number; passed: boolean; review: Review[] }
 
 export default function Quiz({
-  quizId, questions, needed, passed, attempts, nextTitle, final = false,
+  quizId, questions, needed, passed, attempts, nextTitle, final = false, lang = 'el',
 }: {
   quizId: string;
   questions: PublicQuestion[];
@@ -35,9 +70,11 @@ export default function Quiz({
   nextTitle?: string | null;
   /** Τελικό τεστ επιπέδου: αλλάζει μόνο τα κείμενα, όχι τη λογική. */
   final?: boolean;
+  lang?: 'el' | 'en';
 }) {
-  const heading = final ? 'Τελικό τεστ' : 'Τεστ μαθήματος';
-  const unlocks = final ? 'το επόμενο επίπεδο' : 'το επόμενο μάθημα';
+  const t = T[lang];
+  const heading = final ? t.finalH : t.lessonH;
+  const unlocks = final ? t.nextLevel : t.nextLesson;
   const [picks, setPicks] = useState<Array<number | null>>(() => questions.map(() => null));
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -74,7 +111,7 @@ export default function Quiz({
       if (data.passed) start(() => router.refresh());
       document.getElementById(`quiz-${quizId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch {
-      setErr('Η υποβολή δεν ολοκληρώθηκε. Δοκίμασε ξανά σε λίγο.');
+      setErr(t.err);
     } finally {
       setBusy(false);
     }
@@ -95,11 +132,11 @@ export default function Quiz({
         <div className="quiz-done">
           <span className="quiz-ic"><ICheck /></span>
           <div>
-            <b>Το έχεις περάσει.</b>
-            <p>Μπορείς να το ξαναδώσεις όποτε θέλεις, για επανάληψη.</p>
+            <b>{t.passedB}</b>
+            <p>{t.passedP}</p>
           </div>
           <button type="button" className="btn" onClick={() => { setAgain(true); retry(); }}>
-            Ξανά
+            {t.again}
           </button>
         </div>
       </div>
@@ -121,18 +158,18 @@ export default function Quiz({
       <div className="endcard" id={`quiz-${quizId}`}>
         <div className="endcard-grid" aria-hidden="true" />
         <div className="endcard-in">
-          <span className="endcard-kick">{final ? 'Τελος επιπεδου' : 'Τελος μαθηματος'}</span>
-          <h2>Επόμενο βήμα: Άσκηση</h2>
+          <span className="endcard-kick">{final ? t.endLevel : t.endLesson}</span>
+          <h2>{t.nextStep}</h2>
           <p>
-            {needed} σωστές από {total}. Χωρίς αυτό δεν ξεκλειδώνει {unlocks}
-            {nextTitle ? <>, «{nextTitle}»</> : null}.
+            {t.gate(needed, total, unlocks)}
+            {nextTitle ? <>, {lang === 'en' ? `“${nextTitle}”` : `«${nextTitle}»`}</> : null}.
           </p>
           <button type="button" className="endcard-go" onClick={() => { setOpen(true); jump(); }}>
-            Πήγαινε στην άσκηση <span aria-hidden="true">→</span>
+            {t.goEx} <span aria-hidden="true">→</span>
           </button>
           {attempts > 0 && (
             <span className="endcard-meta">
-              {attempts === 1 ? 'Μία προσπάθεια μέχρι τώρα' : `${attempts} προσπάθειες μέχρι τώρα`}
+              {t.attempts(attempts)}
             </span>
           )}
         </div>
@@ -144,9 +181,9 @@ export default function Quiz({
     <div className="sec quiz" id={`quiz-${quizId}`}>
       <div className="sec-top"><h2>{heading}</h2></div>
       <p className="sub">
-        {needed} σωστές από {total} για να ανοίξει {unlocks}
+        {t.toOpen(needed, total, unlocks)}
         {nextTitle ? <> — <b>{nextTitle}</b></> : null}.
-        {attempts > 0 && !res ? ` Προσπάθειες μέχρι τώρα: ${attempts}.` : ''}
+        {attempts > 0 && !res ? t.soFar(attempts) : ''}
       </p>
 
       <ol className="qlist">
@@ -188,11 +225,11 @@ export default function Quiz({
       {!res ? (
         <div className="qactions">
           <button type="button" className="btn btn-solid" onClick={submit} disabled={busy || unanswered > 0}>
-            {busy ? 'Γίνεται έλεγχος…' : 'Υποβολή'}
+            {busy ? t.checking : t.submit}
           </button>
           {unanswered > 0 && (
             <span className="meta">
-              {unanswered === 1 ? 'Μένει 1 ερώτηση' : `Μένουν ${unanswered} ερωτήσεις`}
+              {t.left(unanswered)}
             </span>
           )}
         </div>
@@ -200,15 +237,15 @@ export default function Quiz({
         <div className={res.passed ? 'qresult ok' : 'qresult no'}>
           <span className="quiz-ic">{res.passed ? <ICheck /> : <ILock />}</span>
           <div>
-            <b>{res.score} / {res.total} — {res.passed ? 'πέρασες' : 'δεν πέρασες'}</b>
+            <b>{res.score} / {res.total} — {res.passed ? t.pass : t.fail}</b>
             <p>
               {res.passed
-                ? (nextTitle ? `Το επόμενο μάθημα άνοιξε: ${nextTitle}.`
-                             : final ? 'Το επόμενο επίπεδο άνοιξε.' : 'Το επόμενο μάθημα άνοιξε.')
-                : `Χρειάζονται ${res.needed} σωστές. Διάβασε τις εξηγήσεις και ξαναδοκίμασε — δεν υπάρχει όριο προσπαθειών.`}
+                ? (nextTitle ? t.opened(nextTitle)
+                             : final ? t.levelOpened : t.lessonOpened)
+                : t.need(res.needed)}
             </p>
           </div>
-          <button type="button" className="btn" onClick={retry}>Ξανά</button>
+          <button type="button" className="btn" onClick={retry}>{t.again}</button>
         </div>
       )}
     </div>

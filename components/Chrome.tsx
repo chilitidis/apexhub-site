@@ -10,7 +10,7 @@ import { useEffect } from 'react';
  * Όλα είναι διακριτικά επειδή συμβαίνουν πολλές φορές. Με reduced-motion
  * δεν τρέχει τίποτα από αυτά — το περιεχόμενο είναι ήδη ορατό από το CSS.
  */
-export default function Chrome() {
+export default function Chrome({ rail = ['Trading', 'Κοινότητα', 'Affiliate'] }: { rail?: string[] }) {
   useEffect(() => {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -176,9 +176,9 @@ export default function Chrome() {
         <div className="line" />
         <div className="fill" id="railfill" />
         <div className="stops">
-          <a href="#p1">Trading</a>
-          <a href="#p2">Κοινότητα</a>
-          <a href="#p3">Affiliate</a>
+          <a href="#p1">{rail[0]}</a>
+          <a href="#p2">{rail[1]}</a>
+          <a href="#p3">{rail[2]}</a>
         </div>
       </div>
     </>
