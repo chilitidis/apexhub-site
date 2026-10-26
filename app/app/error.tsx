@@ -11,14 +11,17 @@
 export default function AppError({
   error, reset,
 }: { error: Error & { digest?: string }; reset: () => void }) {
+  /* Client component χωρίς props από τον server: η γλώσσα διαβάζεται από το
+     `<html lang>`, που το γράφει ο server. */
+  const en = typeof document !== 'undefined' && document.documentElement.lang === 'en';
   return (
     <div className="errbox">
-      <b>Κάτι χάλασε σε αυτή τη σελίδα.</b>
-      <p>{error.message || 'Άγνωστο σφάλμα.'}</p>
-      {error.digest && <code>Κωδικός: {error.digest}</code>}
+      <b>{en ? 'Something broke on this page.' : 'Κάτι χάλασε σε αυτή τη σελίδα.'}</b>
+      <p>{error.message || (en ? 'Unknown error.' : 'Άγνωστο σφάλμα.')}</p>
+      {error.digest && <code>{en ? 'Code' : 'Κωδικός'}: {error.digest}</code>}
       <div className="fm-row" style={{ marginTop: 16 }}>
-        <button className="btn btn-solid btn-sm" onClick={reset} type="button">Δοκίμασε ξανά</button>
-        <a className="btn btn-line btn-sm" href="/app">Αρχική</a>
+        <button className="btn btn-solid btn-sm" onClick={reset} type="button">{en ? 'Try again' : 'Δοκίμασε ξανά'}</button>
+        <a className="btn btn-line btn-sm" href="/app">{en ? 'Home' : 'Αρχική'}</a>
       </div>
     </div>
   );
