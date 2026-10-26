@@ -1,5 +1,8 @@
 import dynamic from 'next/dynamic';
 import Chrome from '@/components/Chrome';
+import LangSwitch from '@/components/LangSwitch';
+import { currentLang } from '@/lib/lang';
+import { HOME } from './home-copy';
 
 /* Η σκηνή φορτώνει μόνο στον browser. Το `ssr: false` δεν είναι προαίρεση:
    το three.js αγγίζει document κατά την αρχικοποίηση, και ένα μισό MB
@@ -8,10 +11,16 @@ import Chrome from '@/components/Chrome';
 const Peak = dynamic(() => import('@/components/Peak'), { ssr: false });
 
 export default function Home() {
+  const lang = currentLang();
+  const c = HOME[lang];
+  const P = c.pillars.items;
+  const NUMS = lang === 'en' ? ['I', 'II', 'III'] : ['Ι', 'ΙΙ', 'ΙΙΙ'];
+  const offerTp = [c.offer.open, c.offer.members, c.offer.members, c.offer.members, c.offer.members, c.offer.soon];
+  const offerCls = ['item', 'item wide', 'item', 'item', 'item wide', 'item soon'];
   return (
     <>
       <Peak />
-      <Chrome />
+      <Chrome rail={c.rail} />
       <header className="bar">
         <div className="wrap bar-in">
           <a className="mark" href="#top" aria-label="ApexHub — Trading Community">
@@ -39,12 +48,15 @@ export default function Home() {
             </span>
           </a>
           <nav>
-            <a href="#who">Ποιοι είμαστε</a>
-            <a href="#pillars">Οι πυλώνες</a>
-            <a href="#voices">Μέλη</a>
-            <a href="#offer">Τι προσφέρουμε</a>
+            <a href="#who">{c.nav.who}</a>
+            <a href="#pillars">{c.nav.pillars}</a>
+            <a href="#voices">{c.nav.voices}</a>
+            <a href="#offer">{c.nav.offer}</a>
           </nav>
-          <a className="btn btn-line btn-sm" href="https://apexhub.gr/login">Σύνδεση</a>
+          <div className="bar-acts">
+            <LangSwitch lang={lang} />
+            <a className="btn btn-line btn-sm" href="https://apexhub.gr/login">{c.nav.login}</a>
+          </div>
         </div>
       </header>
 
@@ -53,27 +65,23 @@ export default function Home() {
         <div className="stage" id="stage">
         <div className="wrap hero">
           <div className="lbl kicker rise">
-            <span>TRADING</span><span className="dot"></span>
-            <span>ΚΟΙΝΟΤΗΤΑ</span><span className="dot"></span>
-            <span>ΕΚΠΑΙΔΕΥΣΗ</span>
+            <span>{c.kicker[0]}</span><span className="dot"></span>
+            <span>{c.kicker[1]}</span><span className="dot"></span>
+            <span>{c.kicker[2]}</span>
           </div>
-          <h1><span className="w">Χτίζουμε</span><br /><span className="w"><b>ανθρώπους</b></span><br /><span className="w">με</span> <span className="w"><em>αξία.</em></span></h1>
-          <p className="lede rise">
-            Ένα πρότυπο. Μια κοινότητα. Το APEXHUB είναι μια ελληνική κοινότητα
-            traders που μαθαίνουν μαζί, δουλεύουν με πειθαρχία και μοιράζονται ό,τι
-            ξέρουν — στο Telegram, κάθε μέρα.
-          </p>
+          <h1><span className="w">{c.h1[0]}</span><br /><span className="w"><b>{c.h1[1]}</b></span><br /><span className="w">{c.h1[2]}</span> <span className="w"><em>{c.h1[3]}</em></span></h1>
+          <p className="lede rise">{c.lede}</p>
           <div className="ctas rise">
-            <a className="btn btn-solid" href="https://t.me/ApexHubChannel" target="_blank" rel="noopener">Μπες στο κανάλι μας</a>
-            <a className="btn btn-line" href="#pillars">Τι θα βρεις μέσα</a>
+            <a className="btn btn-solid" href="https://t.me/ApexHubChannel" target="_blank" rel="noopener">{c.ctaJoin}</a>
+            <a className="btn btn-line" href="#pillars">{c.ctaInside}</a>
           </div>
-          <p className="note rise">Ανοιχτό σε όλους. Χωρίς κάρτα, χωρίς δέσμευση.</p>
+          <p className="note rise">{c.note}</p>
         </div>
         </div>
 
         <div className="wrap">
           <div className="values">
-            <div>Πειθαρχία</div><div>Ακεραιότητα</div><div>Σεβασμός</div><div>Εξέλιξη</div>
+            {c.values.map((v) => <div key={v}>{v}</div>)}
           </div>
         </div>
 
@@ -81,39 +89,24 @@ export default function Home() {
         <section id="who">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">01</span><span className="lbl">Ποιοι είμαστε</span></div>
+              <div className="idx"><span className="num">01</span><span className="lbl">{c.who.lbl}</span></div>
               <div>
-                <h2>Μια ομάδα με ονόματα, όχι ένα λογότυπο.</h2>
-                <p className="sub">
-                  Οι περισσότερες κοινότητες trading κρύβονται πίσω από ψευδώνυμα και
-                  screenshot κερδών. Εμείς βάζουμε τα ονόματά μας στην πόρτα.
-                </p>
+                <h2>{c.who.h2}</h2>
+                <p className="sub">{c.who.sub}</p>
               </div>
             </div>
 
             <div className="who">
               <div className="body" data-rev>
-                <p>
-                  Το APEXHUB δεν φτιάχτηκε για να πουλήσει ένα μάθημα και να φύγει.
-                  Φτιάχτηκε για να υπάρχει κάπου που κάποιος μπορεί να ρωτήσει
-                  <strong>«γιατί μπήκες εκεί;»</strong> και να πάρει πραγματική
-                  απάντηση από τον άνθρωπο που μπήκε.
-                </p>
-                <p>
-                  Λειτουργούμε μέσα από το Telegram, γιατί εκεί είναι ήδη ο κόσμος και
-                  εκεί γίνεται η συζήτηση την ώρα που μετράει. Γύρω από αυτό χτίζουμε
-                  την πλατφόρμα μελών: αρχείο, εργαλεία και την ακαδημία.
-                </p>
-                <p>
-                  Στόχος μας δεν είναι το επόμενο σήμα. Είναι η <strong>εκπαίδευση, η
-                  πειθαρχία και η σωστή διαχείριση ρίσκου</strong> — τα μόνα τρία
-                  πράγματα που κρατάνε κάποιον στις αγορές περισσότερο από έναν χρόνο.
-                </p>
+                <p>{c.who.p1a} <strong>{c.who.p1b}</strong> {c.who.p1c}</p>
+                <p>{c.who.p2}</p>
+                <p>{c.who.p3a} <strong>{c.who.p3b}</strong> {c.who.p3c}</p>
               </div>
 
               <div className="roster" data-rev>
-                <div className="row"><span className="nm">Φώτης Χιλιτίδης</span><span className="rl">CEO</span></div>
-                <div className="row"><span className="nm">Ιωάννης Χιλιτίδης</span><span className="rl">CTO</span></div>
+                {c.who.roster.map(([nm, rl]) => (
+                  <div className="row" key={nm}><span className="nm">{nm}</span><span className="rl">{rl}</span></div>
+                ))}
               </div>
             </div>
           </div>
@@ -123,58 +116,28 @@ export default function Home() {
         <section id="pillars">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">02</span><span className="lbl">Οι πυλώνες</span></div>
+              <div className="idx"><span className="num">02</span><span className="lbl">{c.pillars.lbl}</span></div>
               <div>
-                <h2>Τρεις πυλώνες. Ένα οικοσύστημα.</h2>
-                <p className="sub">
-                  Trading χωρίς εκπαίδευση είναι αντιγραφή. Εκπαίδευση χωρίς κοινότητα
-                  είναι ένα PDF που δεν άνοιξες ποτέ. Και μια κοινότητα μεγαλώνει από
-                  τους ίδιους τους ανθρώπους της. Το ένα κρατάει το άλλο όρθιο.
-                </p>
+                <h2>{c.pillars.h2}</h2>
+                <p className="sub">{c.pillars.sub}</p>
               </div>
             </div>
 
             <div className="pillars">
-
-              <article className="pillar" data-rev id="p1">
-                <div className="no">Ι</div>
-                <div>
-                  <h3>Trading</h3>
-                  <p className="kick">Η δουλειά της ημέρας — εκπαιδευτικό υλικό, live sessions και trading ideas.</p>
-                </div>
-                <ul>
-                  <li><span className="d"></span><div><b>Trading ideas με σκεπτικό</b><span>Γιατί τώρα, πού είναι το ρίσκο, τι ακυρώνει την ιδέα.</span></div></li>
-                  <li><span className="d"></span><div><b>Live sessions</b><span>Βλέπεις τη διαδικασία την ώρα που γίνεται, όχι μόνο το αποτέλεσμα.</span></div></li>
-                  <li><span className="d"></span><div><b>Εκπαίδευση</b><span>Δομημένη ύλη από τις βάσεις μέχρι το ρίσκο και την ψυχολογία, μέσα στην πλατφόρμα.</span></div></li>
-                </ul>
-              </article>
-
-              <article className="pillar" data-rev id="p2">
-                <div className="no">ΙΙ</div>
-                <div>
-                  <h3>Κοινότητα</h3>
-                  <p className="kick">Στήριξη και εξέλιξη. Άνθρωποι που κάνουν το ίδιο πράγμα, στον ίδιο χρόνο.</p>
-                </div>
-                <ul>
-                  <li><span className="d"></span><div><b>Ενεργή κοινότητα στο Telegram</b><span>Η συζήτηση γίνεται εκεί που είσαι ήδη.</span></div></li>
-                  <li><span className="d"></span><div><b>Λύσεις σε κάθε απορία</b><span>Ρωτάς και σου απαντά ο ίδιος που άνοιξε την κίνηση — όχι φόρμα υποστήριξης.</span></div></li>
-                  <li><span className="d"></span><div><b>Συνέπεια και καθοδήγηση</b><span>Το κομμάτι που ρίχνει τους περισσότερους δεν είναι η ανάλυση. Είναι η απομόνωση.</span></div></li>
-                </ul>
-              </article>
-
-              <article className="pillar" data-rev id="p3">
-                <div className="no">ΙΙΙ</div>
-                <div>
-                  <h3>Affiliate</h3>
-                  <p className="kick">Για όσους θέλουν να χτίσουν κάτι δικό τους μέσα στην κοινότητα — με κανόνες γραμμένους και αριθμούς ορατούς.</p>
-                </div>
-                <ul>
-                  <li><span className="d"></span><div><b>Δικός σου σύνδεσμος</b><span>Όποιος έρθει από εσένα καταγράφεται αυτόματα. Χωρίς κωδικούς και χειρόγραφες λίστες.</span></div></li>
-                  <li><span className="d"></span><div><b>Προμήθεια με σταθερό κανόνα</b><span>Υπολογίζεται κάθε μήνα πάνω στα ενεργά μέλη, και τη βλέπεις αναλυτικά στο back office.</span></div></li>
-                  <li><span className="d"></span><div><b>Βαθμίδες που ανεβαίνουν με τη δουλειά</b><span>Όσο μεγαλώνει η ομάδα σου αλλάζει το ποσοστό σου. Οι κανόνες είναι ίδιοι για όλους.</span></div></li>
-                </ul>
-              </article>
-
+              {P.map((p, i) => (
+                <article className="pillar" data-rev id={`p${i + 1}`} key={p.h}>
+                  <div className="no">{NUMS[i]}</div>
+                  <div>
+                    <h3>{p.h}</h3>
+                    <p className="kick">{p.kick}</p>
+                  </div>
+                  <ul>
+                    {p.li.map(([b, t]) => (
+                      <li key={b}><span className="d"></span><div><b>{b}</b><span>{t}</span></div></li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -183,36 +146,17 @@ export default function Home() {
         <section id="paths">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">03</span><span className="lbl">Εκτέλεση</span></div>
+              <div className="idx"><span className="num">03</span><span className="lbl">{c.paths.lbl}</span></div>
               <div>
-                <h2>Δύο δρόμοι. Διάλεξε αυτόν που σου ταιριάζει.</h2>
-                <p className="sub">
-                  Η εκπαίδευση είναι η ίδια. Αυτό που αλλάζει είναι με ποιανού το
-                  κεφάλαιο δουλεύεις.
-                </p>
+                <h2>{c.paths.h2}</h2>
+                <p className="sub">{c.paths.sub}</p>
               </div>
             </div>
 
             <div className="paths">
-              <div className="path" data-rev>
-                <div className="tp">Δρόμος Α</div>
-                <h4>Funded account</h4>
-                <ul>
-                  <li><span className="d"></span><span>Δουλεύεις με κεφάλαιο που σου παρέχεται μέσω funded account.</span></li>
-                  <li><span className="d"></span><span>Κρατάς ποσοστό από τα κέρδη, σύμφωνα με τους όρους του provider.</span></li>
-                  <li><span className="d"></span><span>Δυνατότητα κλιμάκωσης κεφαλαίου με βάση την απόδοσή σου.</span></li>
-                </ul>
-              </div>
-              <div className="seam" aria-hidden></div>
-              <div className="path" data-rev>
-                <div className="tp">Δρόμος Β</div>
-                <h4>Real account</h4>
-                <ul>
-                  <li><span className="d"></span><span>Δουλεύεις με δικό σου κεφάλαιο.</span></li>
-                  <li><span className="d"></span><span>Τα κέρδη και οι ζημιές αφορούν αποκλειστικά τον δικό σου λογαριασμό.</span></li>
-                  <li><span className="d"></span><span>Πλήρης έλεγχος στις συναλλαγές και στη στρατηγική σου.</span></li>
-                </ul>
-              </div>
+              {[c.paths.a, c.paths.b].map((pt, i) => (
+                <PathCard key={pt.tp} pt={pt} seam={i === 0} />
+              ))}
             </div>
           </div>
         </section>
@@ -221,79 +165,29 @@ export default function Home() {
         <section id="voices">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">04</span><span className="lbl">Μέλη</span></div>
+              <div className="idx"><span className="num">04</span><span className="lbl">{c.voices.lbl}</span></div>
               <div>
-                <h2>Τι λέει η κοινότητα.</h2>
-                <p className="sub">
-                  Πραγματικοί άνθρωποι, με τα ονόματά τους. Τα λόγια είναι δικά τους,
-                  όπως γράφτηκαν στο Telegram.
-                </p>
+                <h2>{c.voices.h2}</h2>
+                <p className="sub">{c.voices.sub}{c.voices.translated ? ` ${c.voices.translated}` : ''}</p>
               </div>
             </div>
 
             <div className="voices">
-              <figure className="voice" data-rev>
-                <blockquote>
-                  Δεν έχω πολύ χρόνο γιατί είμαι φαντάρος, αλλά το community με στηρίζει
-                  και με βοηθάει πολύ. Μου λύνει απορίες όποτε χρειάζεται και με κρατάει
-                  συνεπή στο ταξίδι μου.
-                </blockquote>
-                <figcaption>
-                  <span className="av">Ν</span>
-                  <span className="who2">Νίκος</span>
-                  <span className="meta">Μέλος</span>
-                </figcaption>
-              </figure>
-
-              <figure className="voice" data-rev>
-                <blockquote>
-                  Ξεκίνησε χωρίς προηγούμενη εμπειρία και χρειάστηκε 10–15 ημέρες για να
-                  κατανοήσει τη διαδικασία. Με το εκπαιδευτικό υλικό και τα live sessions
-                  έμαθε να διαβάζει καλύτερα τα charts και απέκτησε αυτοπεποίθηση στις
-                  δικές του αποφάσεις.
-                </blockquote>
-                <figcaption>
-                  <span className="av">ΧΑ</span>
-                  <span className="who2">Χρήστος Αλατζάς</span>
-                  <span className="meta">Μέλος</span>
-                </figcaption>
-              </figure>
-
-              <figure className="voice" data-rev>
-                <blockquote>
-                  Ξεκίνησε με επιφυλάξεις, χωρίς προηγούμενη επαφή με τον χώρο. Με τον
-                  χρόνο κατανόησε τη διαδικασία και, παρά τον περιορισμένο χρόνο του,
-                  κατάφερε να γίνει κερδοφόρος στις αγορές.
-                </blockquote>
-                <figcaption>
-                  <span className="av">ΧΜ</span>
-                  <span className="who2">Χρήστος Μάνος</span>
-                  <span className="meta">Μέλος</span>
-                </figcaption>
-              </figure>
-
-              <figure className="voice" data-rev>
-                <blockquote>
-                  Ξεκίνησε με επιφυλάξεις, χωρίς προηγούμενη επαφή με τον χώρο του
-                  trading. Με την εκπαίδευση και την καθοδήγηση κατάφερε να κατανοήσει
-                  τη διαδικασία. Σήμερα συνεχίζει με κίνητρο, συνέπεια και σωστή
-                  οργάνωση.
-                </blockquote>
-                <figcaption>
-                  <span className="av">ΧΚ</span>
-                  <span className="who2">Χρήστος Κυπαρίσσης</span>
-                  <span className="meta">Μέλος</span>
-                </figcaption>
-              </figure>
+              {c.voices.items.map((v) => (
+                <figure className="voice" data-rev key={v.name}>
+                  <blockquote>{v.q}</blockquote>
+                  <figcaption>
+                    <span className="av">{v.av}</span>
+                    <span className="who2">{v.name}</span>
+                    <span className="meta">{c.voices.member}</span>
+                  </figcaption>
+                </figure>
+              ))}
             </div>
 
-            <p className="swipe">Σύρε για περισσότερα →</p>
+            <p className="swipe">{c.voices.swipe}</p>
 
-            <p className="disclaim">
-              Ατομικά αποτελέσματα μελών. Δεν αποτελούν εγγύηση ούτε ένδειξη
-              μελλοντικών αποτελεσμάτων. Τα περισσότερα άτομα που ασχολούνται με το
-              trading δεν είναι κερδοφόρα.
-            </p>
+            <p className="disclaim">{c.voices.disclaim}</p>
           </div>
         </section>
 
@@ -301,47 +195,22 @@ export default function Home() {
         <section id="offer">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">05</span><span className="lbl">Τι προσφέρουμε</span></div>
+              <div className="idx"><span className="num">05</span><span className="lbl">{c.offer.lbl}</span></div>
               <div>
-                <h2>Τι παίρνεις στα χέρια σου.</h2>
-                <p className="sub">
-                  Το κανάλι είναι ανοιχτό σε όλους. Τα υπόλοιπα ζουν μέσα στην
-                  κοινότητα των μελών.
-                </p>
+                <h2>{c.offer.h2}</h2>
+                <p className="sub">{c.offer.sub}</p>
               </div>
             </div>
 
             <div className="offer">
-              <div className="item" data-rev>
-                <div className="tp">Ανοιχτό</div>
-                <h4>Κανάλι Telegram</h4>
-                <p>Αναλύσεις, κομμάτια από τη δουλειά της ημέρας και ανακοινώσεις.</p>
-              </div>
-              <div className="item wide" data-rev>
-                <div className="tp">Μέλη</div>
-                <h4>VIP κοινότητα</h4>
-                <p>Το κυρίως δωμάτιο. Trading ideas, live sessions και άμεση πρόσβαση στην ομάδα.</p>
-              </div>
-              <div className="item" data-rev>
-                <div className="tp">Μέλη</div>
-                <h4>Εκπαιδευτικό υλικό</h4>
-                <p>Δομημένη ύλη από τις βάσεις μέχρι τη διαχείριση ρίσκου και την ψυχολογία.</p>
-              </div>
-              <div className="item" data-rev>
-                <div className="tp">Μέλη</div>
-                <h4>Πλατφόρμα μελών</h4>
-                <p>Το αρχείο, τα εργαλεία και η πρόοδός σου, στο apexhub.gr.</p>
-              </div>
-              <div className="item wide" data-rev>
-                <div className="tp">Μέλη</div>
-                <h4>Ultimate Trading Journal</h4>
-                <p>Το ημερολόγιό σου. Καταγράφεις κάθε κίνηση και βλέπεις τα δικά σου μοτίβα.</p>
-              </div>
-              <div className="item soon">
-                <div className="tp">Έρχεται</div>
-                <h4>Ακαδημία</h4>
-                <p>Δομημένα μαθήματα με σειρά και πρόοδο, μέσα στην πλατφόρμα.</p>
-              </div>
+              {c.offer.items.map(([h, t], i) => (
+                /* Το «Έρχεται» δεν παίρνει reveal: δεν είναι κάτι που υπάρχει ακόμη. */
+                <div className={offerCls[i]} key={h} {...(i < 5 ? { 'data-rev': true } : {})}>
+                  <div className="tp">{offerTp[i]}</div>
+                  <h4>{h}</h4>
+                  <p>{t}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -350,37 +219,28 @@ export default function Home() {
         <section id="access">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">06</span><span className="lbl">Πρόσβαση</span></div>
+              <div className="idx"><span className="num">06</span><span className="lbl">{c.access.lbl}</span></div>
               <div>
-                <h2>Ξεκίνα από εκεί που δεν κοστίζει τίποτα.</h2>
-                <p className="sub">
-                  Δεν χρειάζεται να αποφασίσεις σήμερα. Μπες στο κανάλι, δες τη δουλειά
-                  για όσο θέλεις, και αν σου ταιριάζει προχωράς.
-                </p>
+                <h2>{c.access.h2}</h2>
+                <p className="sub">{c.access.sub}</p>
               </div>
             </div>
 
             <div className="access">
               <div className="card lead" data-rev>
                 <div>
-                  <h3>Το κανάλι μας στο Telegram</h3>
-                  <p>
-                    Ανοιχτό σε όλους. Από εκεί ανακοινώνεται και πότε ανοίγουν θέσεις
-                    για νέα μέλη.
-                  </p>
+                  <h3>{c.access.ch}</h3>
+                  <p>{c.access.chP}</p>
                 </div>
-                <a className="btn btn-solid" href="https://t.me/ApexHubChannel" target="_blank" rel="noopener">Άνοιγμα στο Telegram</a>
+                <a className="btn btn-solid" href="https://t.me/ApexHubChannel" target="_blank" rel="noopener">{c.access.chBtn}</a>
               </div>
 
               <div className="card" data-rev>
                 <div>
-                  <h3>Είσαι ήδη μέλος;</h3>
-                  <p>
-                    Η είσοδος στην πλατφόρμα γίνεται με τον λογαριασμό Telegram σου.
-                    Αναγνωρίζεσαι αυτόματα — αν είσαι μέσα στην κοινότητα, περνάς.
-                  </p>
+                  <h3>{c.access.mem}</h3>
+                  <p>{c.access.memP}</p>
                 </div>
-                <a className="btn btn-line" href="https://apexhub.gr/login">Σύνδεση</a>
+                <a className="btn btn-line" href="https://apexhub.gr/login">{c.access.memBtn}</a>
               </div>
             </div>
           </div>
@@ -390,48 +250,24 @@ export default function Home() {
         <section className="risk">
           <div className="wrap">
             <div className="head" data-rev>
-              <div className="idx"><span className="num">07</span><span className="lbl">Ρίσκο</span></div>
+              <div className="idx"><span className="num">07</span><span className="lbl">{c.risk.lbl}</span></div>
               <div>
-                <h2>Αποποίηση ευθύνης.</h2>
-                <p className="sub">
-                  Το APEXHUB παρέχει ανάλυση αγοράς, εκπαιδευτικό περιεχόμενο και
-                  trading ideas, για ενημερωτικούς και εκπαιδευτικούς σκοπούς.
-                </p>
+                <h2>{c.risk.h2}</h2>
+                <p className="sub">{c.risk.sub}</p>
               </div>
             </div>
 
             <div className="rk">
-              <div>
-                <div className="n">01</div>
-                <h4>Δεν είναι επενδυτική συμβουλή</h4>
-                <p>
-                  Τα trading ideas δεν λαμβάνουν υπόψη την προσωπική οικονομική
-                  κατάσταση ή το επενδυτικό προφίλ κάθε μέλους.
-                </p>
-              </div>
-              <div>
-                <div className="n">02</div>
-                <h4>Υψηλό ρίσκο</h4>
-                <p>
-                  Το trading μπορεί να οδηγήσει σε σημαντική ή και πλήρη απώλεια
-                  κεφαλαίου. Δεν υπάρχουν εγγυημένα κέρδη.
-                </p>
-              </div>
-              <div>
-                <div className="n">03</div>
-                <h4>Δική σου απόφαση</h4>
-                <p>
-                  Δεν διαχειριζόμαστε κεφάλαια ούτε πραγματοποιούμε συναλλαγές για
-                  λογαριασμό μελών. Κάθε απόφαση και το ρίσκο της ανήκουν αποκλειστικά
-                  σε εσένα.
-                </p>
-              </div>
+              {c.risk.items.map(([h, t], i) => (
+                <div key={h}>
+                  <div className="n">{String(i + 1).padStart(2, '0')}</div>
+                  <h4>{h}</h4>
+                  <p>{t}</p>
+                </div>
+              ))}
             </div>
 
-            <p className="rk-foot">
-              Στόχος μας είναι η εκπαίδευση, η πειθαρχία και η σωστή διαχείριση ρίσκου.
-              Μην επενδύσεις χρήματα που δεν αντέχεις να χάσεις.
-            </p>
+            <p className="rk-foot">{c.risk.foot}</p>
           </div>
         </section>
 
@@ -463,12 +299,27 @@ export default function Home() {
               <span className="tc">Trading Community</span>
             </span>
           </a>
-          <a href="https://apexhub.gr/login">Πλατφόρμα μελών</a>
-          <a href="#pillars">Οι πυλώνες</a>
+          <a href="https://apexhub.gr/login">{c.footer.platform}</a>
+          <a href="#pillars">{c.footer.pillars}</a>
           <a href="https://t.me/ApexHubChannel" target="_blank" rel="noopener">Telegram</a>
           <span className="cr">© 2026 Chilitidis &amp; Co</span>
         </div>
       </footer>
+    </>
+  );
+}
+
+function PathCard({ pt, seam }: { pt: { tp: string; h: string; li: string[] }; seam: boolean }) {
+  return (
+    <>
+      <div className="path" data-rev>
+        <div className="tp">{pt.tp}</div>
+        <h4>{pt.h}</h4>
+        <ul>
+          {pt.li.map((x) => <li key={x}><span className="d"></span><span>{x}</span></li>)}
+        </ul>
+      </div>
+      {seam && <div className="seam" aria-hidden></div>}
     </>
   );
 }
